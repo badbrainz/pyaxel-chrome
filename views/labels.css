@@ -1,0 +1,127 @@
+.foreground {
+    background: url(../graph/pie.png) 0 0 no-repeat
+}
+
+.background {
+    background: url(../graph/pie.png) -48px 0 no-repeat
+}
+
+.background,.foreground,.pie {
+    width: 48px;
+    height: 48px
+}
+
+.background,.foreground {
+    top: 0;
+    left: 0
+}
+
+.panel {
+    padding: 3px 16px
+}
+
+.measurements,.metadata,.panel {
+    display: -webkit-box;
+    -webkit-box-orient: horizontal
+}
+
+.date {
+    width: 100px
+}
+
+.name {
+    color: #000
+}
+
+.labels {
+    margin-left: 10px
+}
+
+.controls div,.link {
+    color: #0772A1;
+    cursor: pointer
+}
+
+.labels,.metadata,.name {
+    -webkit-box-flex: 1
+}
+
+.controls div {
+    margin-right: 18px;
+    display: inline-block
+}
+
+.date,.status {
+    color: gray
+}
+
+.measurements div {
+    padding-right: 4px
+}
+
+.percent::after {
+    content: '% of'
+}
+
+.rate::before {
+    content: '- '
+}
+
+.rate::after {
+    content: 'b/s'
+}
+
+.percent,.rate,.size {
+    color: #697c8f
+}
+
+.url {
+    text-decoration: none;
+    display: inline-block;
+    max-width: 99%;
+    color: #63941A
+}
+
+.name,.url {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis
+}
+
+.diagonal-stripes {
+    background-image: -webkit-gradient(linear,100% 0,0 100%,from(transparent),color-stop(0.15,transparent),color-stop(0.15,hsla(0,0%,70%,.1)),color-stop(0.5,hsla(0,0%,70%,.1)),color-stop(0.5,transparent),color-stop(0.65,transparent),color-stop(0.65,hsla(0,0%,70%,.1)),to(hsla(0,0%,70%,.1)));
+    -webkit-background-size: 50px
+}
+
+.vertical-stripes {
+    background-image: -webkit-linear-gradient(0deg,hsla(0,0%,80%,.3) 10%,transparent 10%,transparent);
+    background-color: #fff;
+    -webkit-background-size: 10px;
+    outline: #DDD solid 1px
+}
+
+.collapsed {
+    display: none!important
+}
+
+.indicator {
+    height: 100%;
+    background-color: #809BB3;
+    display: inline-block
+}
+
+.panel,.pie {
+    position: relative
+}
+
+.background,.indicator {
+    position: absolute
+}
+
+.controls div,.link,.url:hover {
+    text-decoration: underline
+}
+
+.panel.cancelled .background,.panel.cancelled .cancel,.panel.cancelled .foreground,.panel.cancelled .pause,.panel.cancelled .percent,.panel.cancelled .progress,.panel.cancelled .rate,.panel.cancelled .resume,.panel.cancelled .size,.panel.completed .background,.panel.completed .cancel,.panel.completed .foreground,.panel.completed .pause,.panel.completed .percent,.panel.completed .progress,.panel.completed .rate,.panel.completed .resume,.panel.completed .retry,.panel.completed .size,.panel.idle .pause,.panel.idle .rate,.panel.idle .remove,.panel.idle .retry,.panel.queued .background,.panel.queued .cancel,.panel.queued .foreground,.panel.queued .name,.panel.queued .pause,.panel.queued .percent,.panel.queued .progress,.panel.queued .rate,.panel.queued .resume,.panel.queued .size,.panel.running .remove,.panel.running .resume,.panel.running .retry,.panel.waiting .background,.panel.waiting .controls,.panel.waiting .foreground,.panel.waiting .name,.panel.waiting .percent,.panel.waiting .progress,.panel.waiting .rate,.panel.waiting .size {
+    display: none
+}

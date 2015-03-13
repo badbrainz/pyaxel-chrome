@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+		<link rel="stylesheet" type="text/css" href="chrome-bootstrap.css"/>
+		<link rel="stylesheet" type="text/css" href="options.css"/>
+        <script src="../global.js"></script>
+        <script src="utils.js"></script>
+		<script src="modals.js"></script>
+        <script src="dllib.js"></script>
+        <script src="settings.js"></script>
+        <style>
+        .chrome-bootstrap .throbber {
+            background-image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYiIGhlaWdodD0iMTYiIHZpZXdCb3g9IjAgMCAzMDAgMzAwIgogICAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIj4KICA8cGF0aCBkPSJNIDE1MCwwCiAgICAgICAgICAgYSAxNTAsMTUwIDAgMCwxIDEwNi4wNjYsMjU2LjA2NgogICAgICAgICAgIGwgLTM1LjM1NSwtMzUuMzU1CiAgICAgICAgICAgYSAtMTAwLC0xMDAgMCAwLDAgLTcwLjcxMSwtMTcwLjcxMSB6IgogICAgICAgIGZpbGw9IiMzZDdmZTYiPgogICAgPGFuaW1hdGVUcmFuc2Zvcm0gYXR0cmlidXRlTmFtZT0idHJhbnNmb3JtIiBhdHRyaWJ1dGVUeXBlPSJYTUwiCiAgICAgICAgICAgdHlwZT0icm90YXRlIiBmcm9tPSIwIDE1MCAxNTAiIHRvPSIzNjAgMTUwIDE1MCIKICAgICAgICAgICBiZWdpbj0iMHMiIGR1cj0iMXMiIGZpbGw9ImZyZWV6ZSIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiIC8+CiAgPC9wYXRoPgo8L3N2Zz4K);
+            height: 16px;
+            width: 16px;
+        }
+        .chrome-bootstrap #port {
+            width: 6em;
+        }
+        .chrome-bootstrap #splits,
+        .chrome-bootstrap #speed,
+        .chrome-bootstrap #downloads,
+        .chrome-bootstrap #reconnect,
+        .chrome-bootstrap #delay,
+        .chrome-bootstrap #host {
+            width: 14em;
+        }
+        .chrome-bootstrap #path {
+            width: 24em;
+        }
+        .chrome-bootstrap #test {
+            vertical-align: bottom;
+        }
+        .chrome-bootstrap .speedcontent::after {
+            content: 'kb/s';
+            color: #999;
+        }
+        .chrome-bootstrap .secondscontent::after {
+            content: 'sec.';
+            color: #999;
+        }
+        .chrome-bootstrap .overlay .page .note {
+            color: rgb(151, 156, 160);
+            padding: 14px 17px 14px;
+            text-align: center;
+        }
+        .chrome-bootstrap .overlay .page .vertical {
+            -webkit-box-orient: vertical;
+        }
+        </style>
+    </head>
+    <body class="chrome-bootstrap">
+		<div class="frame subframe">
+            <header>
+                <h1>Settings</h1>
+            </header>
+            <div class="content">
+                <h3>Server</h3>
+                <section>
+                    <label class="stackedlabel">
+                        <div>Host:</div>
+                        <input type="text" id="host" placeholder="Enter a valid IP address">
+                    </label>
+                    <label class="stackedlabel">
+                        <div>Port:</div>
+                        <input type="text" id="port" min="1" max="65535">
+                    </label>
+                    <button id="test">Test connection</button>
+                </section>
+                <div>
+                    <h3>Downloads</h3>
+                    <section>
+                        <label class="stackedlabel">
+                            <div>Download location</div>
+                            <input type="text" id="path" placeholder="Enter a valid path">
+                        </label>
+                    </section>
+                    <section>
+                        <label class="stackedlabel">
+                            <div>Max concurrent downloads</div>
+                            <input id="downloads" type="text" min="1" max="Infinity" pattern="\d+">
+                        </label>
+                        <label class="stackedlabel">
+                            <div>Max splits per download</div>
+                            <input id="splits" type="text" min="1" max="20" pattern="\d+">
+                        </label>
+                        <label class="stackedlabel speedcontent">
+                            <div>Max speed per download</div>
+                            <input id="speed" type="text" pattern="0|[1-9]\d*">
+                        </label>
+                    </section>
+                    <h3>Sockets</h3>
+                    <section>
+                        <label class="stackedlabel">
+                            <div>Max reconnect attempts</div>
+                            <input type="text" id="reconnect">
+                        </label>
+                        <label class="stackedlabel secondscontent">
+                            <div>Reconnect delay</div>
+                            <input type="text" id="delay">
+                        </label>
+                    </section>
+                </div>
+            </div>
+		</div>
+        <template class="notify">
+            <div class="page">
+                <h1></h1>
+                <div class="content-area"></div>
+                <div class="action-area">
+                    <div class="action-area-center">
+                        <div class="button-strip">
+                            <div class="throbber"></div>
+                            <button class="cancel-button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template class="info">
+            <div class="page">
+                <h1></h1>
+                <div class="content-area"></div>
+                <div class="action-area">
+                    <div class="action-area-right">
+                        <div class="button-strip">
+                            <button class="cancel-button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template class="intro">
+            <div class="page">
+                <div class="close-button"></div>
+                <h1>Thanks for using PyaxelWS</h1>
+                <div class="content-area flex vertical">
+                    <div class="flex">
+                    <div class="info flex">
+                        <h3>Metalink</h3>
+                        <div>Take advantage of the new Internet standard that aims to make downloading easier, faster and more reliable. <a href="http://www.wikipedia.org/wiki/Metalink" target="_blank" class="external-link">More info...</a></div>
+                        <div></div>
+                    </div>
+                    <div class="info flex">
+                        <h3>Mirrors & Checksums</h3>
+                        <div>Download from multiple sources and verify file integrity.</div>
+                        <div></div>
+                    </div>
+                    <div class="info flex">
+                        <h3>JavaScript</h3>
+                        <div>Create custom scripts that run automated tasks.</div>
+                        <div></div>
+                    </div>
+                    </div>
+                </div>
+                <div class="note">You should have the <a href="https://code.google.com/p/pyaxelws/source/list" target="_blank" class="external-link">PyaxelWS server</a> running before using this extension.</div>
+            </div>
+        </template>
+    </body>
+</html>

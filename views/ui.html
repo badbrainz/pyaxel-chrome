@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+		<link rel="stylesheet" type="text/css" href="chrome-bootstrap.css"/>
+		<link rel="stylesheet" type="text/css" href="options.css"/>
+        <script src="../global.js"></script>
+        <script src="utils.js"></script>
+        <script src="dllib.js"></script>
+        <script src="ui.js"></script>
+    </head>
+    <body class="chrome-bootstrap">
+		<div class="frame subframe">
+            <header>
+                <h1>UI</h1>
+            </header>
+            <div class="content">
+                <h3>Appearance</h3>
+                <section>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="filename">
+                            <span>Use short file names</span>
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="output">
+                            <span>Show download progress per chunk</span>
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="display">
+                            <span>Display downloads in tab</span>
+                        </label>
+                    </div>
+                </section>
+                <h3>Indicators</h3>
+                <section>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="notify">
+                            <span>Enable desktop notifications</span>
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="icon">
+                            <span>Enable icon animation</span>
+                        </label>
+                    </div>
+                </section>
+                <h3>Integration</h3>
+                <section>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="contextmenu">
+                            <span>Enable context menu</span>
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="verbose">
+                            <span>Enable DevTools log</span>
+                        </label>
+                    </div>
+                </section>
+            </div>
+		</div>
+    </body>
+</html>

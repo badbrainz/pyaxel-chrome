@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>PyaxelWS - Configure new download</title>
+        <link type="text/css" rel="stylesheet" href="widgets.css" />
+        <link type="text/css" rel="stylesheet" href="labels.css" />
+        <script src="../global.js"></script>
+        <script src="utils.js"></script>
+        <script src="dllib.js"></script>
+        <script src="configure.js"></script>
+        <style>
+        body,html{height:100%;margin:0;padding:0}
+        body{display:-webkit-box;cursor:default;text-shadow:#DDD 1px 1px 1px;font-family:"DejaVu Sans",Arial,sans-serif;font-size:12px}
+        body{background-color:#f1f1f1;-webkit-user-select:none;-webkit-box-orient:vertical}
+        button:not(:last-child){margin:0 6px 0 0}
+        select{margin-left:4px}
+        input{-webkit-box-flex:1}
+        input:disabled{background-color:transparent}
+        input[pattern]:invalid{color:red}
+        #footer,#header,#main{display:-webkit-box}
+        #header{height:48px;-webkit-box-align:center;-webkit-box-pack:center}
+        #controls,#main{padding:10px}
+        #main{-webkit-box-orient:vertical;-webkit-box-flex:1}
+        #footer{-webkit-box-pack:end}
+        #controls{display:-webkit-box;-webkit-box-pack:end}
+        #speed,#splits{-webkit-box-flex:0;width:80px}
+        #speed{margin-right:6px}
+        #checksum{display:-webkit-box;margin-right:5px}
+        #hash,.row{display:-webkit-box}
+        .flex input[type=text]{display:block}
+        .row{padding-bottom:6px}
+        .row>:first-child{width:74px;-webkit-box-align:center;display:-webkit-box}
+        .row>:last-child{display:-webkit-box;-webkit-box-flex:1;-webkit-box-align:center}
+        </style>
+    </head>
+
+    <body class="chrome-bootstrap">
+        <div id="header">
+            <div id="info">Configure a new download with optional settings.</div>
+        </div>
+        <div id="main">
+            <div class="row flex">
+                <div>URL:</div><div><input id="url" type="text" disabled></div>
+            </div>
+            <div class="row flex">
+                <div>Referrer:</div><div><input id="referrer" type="text"></div>
+            </div>
+            <div class="row flex">
+                <div>Save to:</div><div><input id="path" type="text"></div>
+            </div>
+            <div class="row flex">
+                <div>File name:</div><div><input id="name" type="text" pattern="^[-\w^&'@{}[\],$=!#().%+~ ]+$"></div>
+            </div>
+            <div class="row">
+                <div>Checksum:</div>
+                <div>
+                    <input id="checksum" type="text">
+                    <select id="hash">
+                        <option value="md5">MD5</option>
+                        <option value="sha1">SHA1</option>
+                        <option value="sha256">SHA256</option>
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div>Max splits:</div><div><input id="splits" type="text"></div>
+            </div>
+            <div class="row">
+                <div>Max speed:</div><div><input id="speed" type="text">kB/s</div>
+            </div>
+        </div>
+        <div id="footer">
+            <div id="controls">
+                <button id="save">Save</button>
+                <button id="queue">Queue</button>
+                <button id="cancel">Cancel</button>
+            </div>
+        </div>
+    </body>
+
+</html>

@@ -1,0 +1,29 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>PyaxelWS - Manage downloads</title>
+        <link type="text/css" rel="stylesheet" href="labels.css" />
+        <link type="text/css" rel="stylesheet" href="widgets.css" />
+        <script src="../global.js"></script>
+        <script src="utils.js"></script>
+        <script src="dllib.js"></script>
+        <script src="popup.js"></script>
+        <style>
+            body,html{height:100%;margin:0;padding:0}body{display:-webkit-box;font-size:12px;font-family:"DejaVu Sans",Arial,sans-serif cursor:default;text-shadow:#DDD 1px 1px 1px}.chrome-bootstrap{font-family:"DejaVu Sans",Arial,sans-serif}#footer,#header,#main{display:-webkit-box}body{-webkit-box-orient:vertical}#header{height:48px;border-bottom:solid 1px #DDD;background-color:#F1F1F1;box-sizing:border-box;-webkit-box-align:center;-webkit-box-pack:center}#main{overflow-y:auto;position:absolute;top:48px;bottom:23px;left:0;right:0;-webkit-box-flex:1}#display{width:100%}#footer{height:23px;background-image:-webkit-linear-gradient(#f3f3f3,#ebebeb);border-top:1px solid #ddd;padding:0 5px;position:absolute;bottom:0;left:0;right:0;box-sizing:border-box;-webkit-box-align:center}#footer .link{margin-left:10px}#status{color:#535353;-webkit-box-flex:1}.date{display:none}.panel{padding:3px;border-bottom:solid 1px #e4e4e4}.progress{display:none}.labels{margin-left:4px}.panel.completed .name,.panel.running .name{display:block}.panel.completed .url,.panel.idle .url,.panel.running .url{display:none}.background,.foreground,.pie{width:36px;height:36px}.background{background-position-x:-36px}.background,.foreground{background-size:cover}
+        </style>
+    </head>
+    <body class="chrome-bootstrap">
+        <div id="header">
+            <div id="info">Manage new or existing downloads.</div>
+        </div>
+        <div id="main">
+            <div id="display"></div>
+        </div>
+        <div id="footer">
+            <div id="status">Downloading: 0/0</div>
+            <div id="settings" class="link">Options</div>
+            <div id="configure" class="link">Configure</div>
+            <div id="clear" class="link">Clear all</div>
+        </div>
+    </body>
+</html>

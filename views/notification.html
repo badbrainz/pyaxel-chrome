@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+        <script src='notification.js'></script>
+        <style>
+            body{font-size:62.5%;font-family:Verdana,Arial,sans,verdana,serif;overflow:hidden}
+            a{text-decoration:none;color:#0066DD}
+            a:hover {text-decoration:underline;text-shadow:#b9b9b9 1px 1px 1px}
+            #main {display:-webkit-box}
+            #logo {height: 32px;width: 32px;margin-right:6px}
+            #content{font-size:1.3em;text-shadow:#cacaca 1px 1px 1px;-webkit-box-flex: 1;width:1px/* somehow this makes vert scrollbar disappear */}
+            #title {font-weight: bold;overflow-x: hidden;white-space: nowrap;text-overflow: ellipsis}
+            #body {word-wrap: break-word;}
+        </style>
+    </head>
+    <body>
+        <div id='main'>
+            <div id='logo'><img src='../graph/32.png' width=32 height=32 /></div>
+            <div id='content'>
+                <div id='title'></div>
+                <div id='body'></div>
+            </div>
+        </div>
+    </body>
+</html>

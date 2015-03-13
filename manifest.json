@@ -1,0 +1,45 @@
+{
+    "name":"PyaxelWS",
+    "version":"2.0.2",
+    "manifest_version":2,
+    "description":"Download Accelerator in Python 2.x.",
+    
+    "icons":{
+        "128":"graph/128.png",
+        "16":"graph/16.png",
+        "48":"graph/48.png"
+    },
+    
+    "background":{
+        "scripts":[
+            "global.js",
+            "background.js"
+        ]
+    },
+
+    "options_page":"views/options.html",
+
+    "browser_action":{
+        "default_icon":{
+            "19":"graph/19.png",
+            "38":"graph/32.png"
+        },
+        "default_title":"PyaxelWS"
+    },
+    "omnibox":{
+        "keyword":"pyaxelws"
+    },
+    
+    "minimum_chrome_version":"26",
+    
+    "permissions":[
+        "contextMenus",
+        "notifications",
+        "activeTab",
+        "storage"
+    ],
+    
+    "web_accessible_resources":[
+        "graph/32.png"
+    ]
+}

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+		<link rel="stylesheet" type="text/css" href="chrome-bootstrap.css"/>
+		<link rel="stylesheet" type="text/css" href="options.css"/>
+		<script src="utils.js"></script>
+        <script src="help.js"></script>
+        <style>
+        .chrome-bootstrap #aboutlinks {
+            margin-top: 200px;
+        }
+        .chrome-bootstrap #manual {
+            -webkit-margin-end: 4px;
+        }
+        .chrome-bootstrap #about-container {
+            display: -webkit-box;
+            margin-top: 15px;
+            -webkit-box-align: center;
+        }
+        .chrome-bootstrap #product-description {
+            -webkit-margin-start: 10px;
+        }
+        .chrome-bootstrap #help-container {
+            margin-top: 16px;
+        }
+        .chrome-bootstrap #version-container {
+            margin-top: 30px;
+        }
+        .chrome-bootstrap #product-container {
+            line-height: 1.8em;
+            margin-top: 200px;
+        }
+        </style>
+    </head>
+    <body class="chrome-bootstrap">
+		<div class="frame subframe">
+            <header>
+                <h1>Help</h1>
+            </header>
+            <div class="content">
+                <div>
+                    <div id="about-container">
+                        <img src="../graph/32.png" width=32 height=32>
+                        <div id="product-description">
+                            <h2>PyaxelWS</h2>
+                            <span id="description"></span>
+                        </div>
+                    </div>
+                    <div id="help-container">
+                        <button id="manual">User manual</button>
+                        <button id="report">Report an issue</button>
+                    </div>
+                    <div id="version-container">
+                        <div><span>Version </span><span id="product-version"></span></div>
+                    </div>
+                    <div id="product-container">
+                        <div>This UI was made using <a href="http://github.com/roykolak/chrome-bootstrap" target="_blank" class="external-link">chrome-bootstrap</a>.</div>
+                    </div>
+                </div>
+            </div>
+		</div>
+    </body>
+</html>

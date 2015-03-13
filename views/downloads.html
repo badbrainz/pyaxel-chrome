@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>PyaxelWS - Downloads</title>
+        <link type="text/css" rel="stylesheet" href="widgets.css" />
+        <link type="text/css" rel="stylesheet" href="labels.css" />
+        <script src="../global.js"></script>
+        <script src="utils.js"></script>
+        <script src="dllib.js"></script>
+        <script src="downloads.js"></script>
+        <style>
+            body,html{height:100%;margin:0;padding:0}body{display:-webkit-box;cursor:default;text-shadow:#DDD 1px 1px 1px;font-family:"DejaVu Sans",Arial,sans-serif;font-size:12px}#footer,#header,#main{display:-webkit-box}#main,body{-webkit-box-orient:vertical}#header{height:48px}#inputbox{width:64%;margin-left:10px;-webkit-box-align:center}#inputbox button{margin-left:6px}#inputbox input,#search{-webkit-box-flex:1}#inputbox input{margin-right:4px;padding-right:18px}#inputbox,#toolbar{display:-webkit-box}#toolbar .link{margin-left:10px}#search,#toolbar{-webkit-box-pack:end}#search>input[type=search]{width:70%}#toolbar{margin:4px;-webkit-user-select:none}#active::before,#cancelled::before,#completed::before,#queued::before{background:#EBEFF9;border-top:1px solid #9CC2EF;margin:2px 0;font-weight:700;padding:.2em .4em;display:block}#active::before{content:'Active'}#queued::before{content:'Queued'}#completed::before{content:'Completed'}#cancelled::before{content:'Cancelled'}#display.simple .progress{display:none}#uri{display:block}.panel:nth-child(odd){background:-webkit-gradient(linear,0 0,0 100%,from(#f9f9f9),to(#ececec))}
+        </style>
+    </head>
+    <body>
+        <div id="header">
+            <div id="inputbox">
+                <input type="text" id="uri" placeholder="Enter a valid URL" pattern="(?:[a-z]+:(?:[a-z]*:)?\/\/)?(?:([^:]+)(?::([^@]*))?@)?(?:(?:[\w-]+\.)+[a-z]{2,}|(?:\d{1,3}\.){3}\d{1,3})(?::(\d+))?\/(?:([^:?#]+))(?:([^\s]+))?\s*" autofocus/>
+                <button id="submit">Save</button>
+                <button id="configure">Configure</button>
+            </div>
+            <div id="search" class="collapsed"><input type="search" results="10" placeholder="Search..."/></div>
+        </div>
+        <div id="main">
+            <div id="toolbar">
+                <div id="settings" class="link">Options</div>
+                <div id="clear" class="link">Clear all</div>
+            </div>
+            <div id="display">
+                <div id="active"></div>
+                <div id="queued"></div>
+                <div id="completed"></div>
+                <div id="cancelled"></div>
+            </div>
+        </div>
+    </body>
+</html>

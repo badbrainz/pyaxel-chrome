@@ -1,0 +1,109 @@
+.chrome-bootstrap {
+    font-family: 'DejaVu Sans', 'Liberation Sans', Arial, sans-serif;
+    font-size: 12px;
+    color: #303942;
+}
+
+.chrome-bootstrap h2 {
+    font-size: 1.3em;
+    margin-bottom: 0.4em;
+}
+
+.chrome-bootstrap .frame.subframe {
+    -webkit-margin-start: 155px;
+}
+
+.chrome-bootstrap .frame .subview {
+    width: 738px;
+    overflow-x: hidden;
+}
+
+.chrome-bootstrap .frame .subview > * {
+    -webkit-margin-before: -20px;
+    -webkit-transition: margin 100ms, opacity 100ms;
+    opacity: 0;
+    z-index: 0;
+    position: absolute;
+    top: 126px;
+    width: inherit;
+    display: block;
+}
+
+.chrome-bootstrap .frame .subview > .selected {
+    -webkit-margin-before: 0;
+    -webkit-transition: margin 200ms, opacity 200ms;
+    -webkit-transition-delay: 100ms;
+    z-index: 1;
+    opacity: 1;
+}
+
+.chrome-bootstrap header {
+    background: -webkit-linear-gradient(#ffffff, #ffffff 40%, rgba(255, 255, 255, 0.92));
+}
+
+.chrome-bootstrap ul.menu li {
+    cursor: pointer;
+}
+
+.chrome-bootstrap .delete {
+    background-position: center;
+}
+
+.chrome-bootstrap .radio,
+.chrome-bootstrap .checkbox {
+    display: -webkit-box;
+    margin: 0;
+}
+
+.chrome-bootstrap .radio > label,
+.chrome-bootstrap .checkbox > label {
+    display: -webkit-box;
+    padding-bottom: 7px;
+    padding-top: 7px;
+    -webkit-box-align: center;
+}
+
+.chrome-bootstrap label > input + span {
+    -webkit-margin-start: 0.6em;
+}
+
+.chrome-bootstrap input[type='text'],
+.chrome-bootstrap input[type='search'] {
+    padding-bottom: 3px;
+}
+
+.chrome-bootstrap input[type=file] {
+    display: none;
+}
+
+.chrome-bootstrap .stackedlabel {
+    display: -webkit-inline-box;
+    vertical-align: top;
+    -webkit-box-orient: vertical;
+    -webkit-margin-end: 2px;
+}
+
+.chrome-bootstrap .stackedlabel > :first-child {
+    margin-bottom: 5px;
+}
+
+.chrome-bootstrap .overlay {
+    z-index: 100;
+}
+
+.chrome-bootstrap .overlay .button-strip {
+    -webkit-box-align: center;
+}
+
+.chrome-bootstrap .external-link {
+    text-decoration: underline;
+}
+
+.chrome-bootstrap .overlay .page .gray-bottom-bar {
+    background-color: #f5f5f5;
+    border-color: #e7e7e7;
+    border-top-style: solid;
+    border-width: 1px;
+    color: #888;
+    padding: 14px 17px;
+}

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8"/>
+		<link rel="stylesheet" type="text/css" href="chrome-bootstrap.css"/>
+        <link rel="stylesheet" type="text/css" href="codemirror.css"/>
+		<link rel="stylesheet" type="text/css" href="options.css"/>
+		<script src="codemirror.js"></script>
+        <script src="../global.js"></script>
+        <script src="utils.js"></script>
+		<script src="modals.js"></script>
+        <script src="scripts.js"></script>
+        <style>
+        .chrome-bootstrap header {
+            height: 126px;
+        }
+        .chrome-bootstrap header iframe {
+            height: 62px;
+            border: 0;
+            display: block;
+        }
+        .chrome-bootstrap .frame .subview {
+            -webkit-margin-start: 0;
+        }
+        .chrome-bootstrap .fullscreen {
+            position: fixed;
+            top: 0;
+            left: 155px;
+            right: 0;
+            bottom: 0;
+            height: auto;
+            z-index: 10;
+            background: white;
+        }
+        .chrome-bootstrap .fullscreen .codebox {
+            position: absolute;
+            bottom: 0;
+            top: 51px;
+            left: 0;
+            right: 0;
+        }
+        .chrome-bootstrap .fullscreen .codebox .source-code {
+            height: 100%;
+            overflow: auto;
+        }
+        .chrome-bootstrap .fullscreen .codebox .source-code .CodeMirror {
+            height: 100%;
+        }
+        .chrome-bootstrap .fullscreen .controls {
+            padding: 13px;
+        }
+        .chrome-bootstrap .codebox {
+            display: -webkit-box;
+            margin-top: -1px;
+            overflow: hidden;
+            position: relative;
+        }
+        .chrome-bootstrap .codebox ul {
+            margin: 0;
+        }
+        .chrome-bootstrap .codebox a {
+            color: #555;
+        }
+        .chrome-bootstrap .codebox .source-code {
+            border: solid 1px #eee;
+        }
+        .chrome-bootstrap .codebox > :first-child {
+            height: 100%;
+            width: 160px;
+            overflow-y: auto;
+        }
+        .chrome-bootstrap .codebox > :last-child {
+            -webkit-box-flex: 1;
+        }
+        .chrome-bootstrap .CodeMirror {
+            border: 0;
+            font-family: inherit;
+            font-size: inherit;
+        }
+        .chrome-bootstrap .highlightable li {
+            padding: 0;
+            display: -webkit-box;
+            -webkit-box-align: center;
+            -webkit-border-start: 6px solid transparent;
+        }
+        .chrome-bootstrap .highlightable li.selected {
+            -webkit-border-start: 6px solid #4e5764;
+        }
+        .chrome-bootstrap .highlightable li:hover {
+            background-color: #F0F0FF;
+        }
+        .chrome-bootstrap .highlightable li:hover a:not(.action) {
+            background-color: transparent;
+        }
+        .chrome-bootstrap .highlightable li:hover > .delete {
+            opacity: 1;
+        }
+        .chrome-bootstrap .highlightable li:not(.selected):hover {
+            -webkit-border-start: 6px solid #ADC1DE;
+        }
+        .chrome-bootstrap .highlightable li > :first-child {
+            -webkit-box-flex: 1;
+        }
+        .chrome-bootstrap .highlightable li .delete {
+            position: static;
+            border: none;
+            display: block;
+            min-width: 24px;
+            min-height: 24px;
+            box-shadow: none;
+            -webkit-padding-end: 0;
+            -webkit-padding-start: 0;
+        }
+        .chrome-bootstrap .highlightable li .delete:hover {
+            background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAqklEQVR4XqWRMQ6DMAxF/1Fyilyj2SmIBUG5QcTCyJA5Z8jGhlBPgRi4TmoDraVmKFJlWYrlp/g5QfwRlwEVNWVa4WzfH9jK6kCkEkBjwxOhLghheMWMELUAqqwQ4OCbnE4LJnhr5IYdqQt4DJQjhe9u4vBBmnxHHNzRFkDGjHDo0VuTAqy2vAG4NkvXXDHxbGsIGlj3e835VFNtdugma/Jk0eXq0lP//5svi4PtO01oFfYAAAAASUVORK5CYII=") no-repeat center;
+            box-shadow: none;
+        }
+        .chrome-bootstrap.platform-linux .source-code {
+            font-size: 11px !important;
+            font-family: dejavu sans mono, monospace;
+        }
+        .chrome-bootstrap.platform-mac .source-code {
+            font-size: 11px !important;
+            font-family: Menlo, Monaco, monospace;
+        }
+        .chrome-bootstrap.platform-windows .source-code {
+            font-size: 12px !important;
+            font-family: Consolas, Lucida Console, monospace;
+        }
+        .chrome-bootstrap .highlightable li.dirty dt {
+            color: blue;
+        }
+        .chrome-bootstrap .highlightable li.dirty dt:before {
+            content: '*';
+        }
+        </style>
+    </head>
+    <body class="chrome-bootstrap">
+		<div class="frame subframe">
+            <header>
+                <h1>Scripts</h1>
+                <iframe name="submenu" src="submenu.html"></iframe>
+            </header>
+            <div class="content">
+                <div class="subview view">
+                    <div id="content">
+                        <div class="controls">
+                            <button class="new-button">New script</button>
+                            <button class="import-button">Import script</button>
+                            <button class="save-button">Save script</button>
+                            <div class="spacer"></div>
+                            <button class="remove-button">Remove all</button>
+                        </div>
+                        <div class="codebox">
+                            <div>
+                                <ul class="highlightable" id="contentscripts"></ul>
+                            </div>
+                            <div class="source-code"></div>
+                        </div>
+                    </div>
+                    <div id="module">
+                        <div class="controls">
+                            <button class="new-button">New script</button>
+                            <button class="import-button">Import script</button>
+                            <button class="save-button">Save script</button>
+                            <div class="spacer"></div>
+                            <button class="remove-button">Remove all</button>
+                        </div>
+                        <div class="codebox">
+                            <div>
+                                <ul class="highlightable" id="modulescripts"></ul>
+                            </div>
+                            <div class="source-code"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <input type="file" multiple>
+                    </div>
+                </div>
+            </div>
+		</div>
+        <template class="script-name">
+            <li class="scriptname">
+                <a href="#">
+                    <dl>
+                        <dt></dt>
+                        <dd></dd>
+                    </dl>
+                </a>
+                <button class="delete"></button>
+            </li>
+        </template>
+        <template class="info">
+            <div class="page">
+                <h1></h1>
+                <div class="content-area"></div>
+                <div class="action-area">
+                    <div class="action-area-right">
+                        <div class="button-strip">
+                            <button class="cancel-button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+        <template class="input">
+            <div class="page">
+                <h1></h1>
+                <div class="content-area"></div>
+                <div class="action-area">
+                    <div class="action-area-right">
+                        <div class="button-strip">
+                            <button class="cancel-button">Cancel</button>
+                            <button class="okay-button">Add</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </body>
+</html>
