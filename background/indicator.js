@@ -1,9 +1,8 @@
-(function(ns) {
+ext.define('extension.indicator', function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
-
-var preferences = messagebus.query('preferences');
+var messages = extension.messages;
+var utils = extension.utils;
+var preferences = extension.preferences;
 
 var count = [];
 var timer = utils.timer(updateFrame, 120);
@@ -108,42 +107,43 @@ chrome.browserAction.onClicked.addListener(function() {
         config.onclick();
 });
 
-var api = {
-    config: config,
+function onTaskCreated(task) {
+    incrementCount(task.id);
+    updateIndicator();
+}
 
-    debug: function() {
-        debugger;
-    }
-};
+function onTaskStopped(task) {
+    decrementCount(task.id);
+    updateIndicator();
+    displayNotification('Download stopped', task.origin);
+}
 
-messagebus.add({
-    'name': 'indicator',
-    'interface': function() {
-        return utils.merge({}, api);
-    },
-    'task-created': function(task) {
-        incrementCount(task.id);
-        updateIndicator();
-    },
-    'task-stopped': function(task) {
-        decrementCount(task.id);
-        updateIndicator();
-        displayNotification('Download stopped', task.origin);
-    },
-    'task-completed': function(task) {
-        decrementCount(task.id);
-        updateIndicator();
-        displayNotification('Download completed', task.origin);
-    },
-    'change-settings': function(diff) {
-        for (var k in diff.values) {
-            switch (k) {
-                case 'icon':
-                    updateIndicator();
-                    break;
-            }
+function onTaskCompleted(task) {
+    decrementCount(task.id);
+    updateIndicator();
+    displayNotification('Download completed', task.origin);
+}
+
+function onSettingsChanged(diff) {
+    for (var k in diff.values) {
+        switch (k) {
+            case 'icon':
+                updateIndicator();
+                break;
         }
     }
-});
+}
 
-})(global.extension);
+return {
+    bind: function() {
+        messages.listen({
+            'task-created': onTaskCreated,
+            'task-stopped': onTaskStopped,
+            'task-completed': onTaskCompleted,
+            'change-settings': onSettingsChanged
+        });
+    },
+    config: config
+};
+
+});

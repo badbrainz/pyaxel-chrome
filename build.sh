@@ -26,12 +26,16 @@ if [ -e "${dir_build}.pem" ]; then
     flags_cr+=("--pack-extension-key=${dir_build}.pem")
 fi
 
+files_ext=(ext/ext.js
+           ext/messages.js)
+
 files_src=(graph/
            views/
            scripts/
+           ext/utils.js
            background/global.js)
 
-files_background=(background/core.js
+files_background=(ext/utils.js
                   background/utils.js
                   background/preferences.js
                   background/indicator.js
@@ -142,6 +146,7 @@ if [ ${clean_dir} -eq 1 ]; then
 fi
 
 initdir ${dir_temp}
+compilescripts files_ext[@] ${dir_temp}/ext.js
 compilescripts files_background[@] ${dir_temp}/background.js
 linkresources files_src[@] ${dir_temp}
 writemanifest ${dir_temp}

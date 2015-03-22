@@ -1,11 +1,10 @@
-(function(ns) {
+ext.define('extension.task', function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
-
-var manager = messagebus.query('manager');
-var sockets = messagebus.query('sockets');
-var preferences = messagebus.query('preferences');
+var messages = extension.messages;
+var utils = extension.utils;
+var manager = extension.manager;
+var sockets = extension.sockets;
+var preferences = extension.preferences;
 
 var tasks = {};
 
@@ -66,20 +65,20 @@ function sendCommand(job, cmd) {
 function broadcastStatus(job) {
     switch (job.status) {
         case JobStatus.CONNECTING:
-            messagebus.broadcast('task-started', job);
+            messages.send('task-started', job);
             break;
         case JobStatus.STOPPED:
-            messagebus.broadcast('task-paused', job);
+            messages.send('task-paused', job);
             break;
         case JobStatus.VERIFIED:
         case JobStatus.COMPLETED:
-            messagebus.broadcast('task-completed', job);
+            messages.send('task-completed', job);
             break;
         case JobStatus.CANCELLED:
         case JobStatus.BAD_REQUEST:
         case JobStatus.INVALID:
         case JobStatus.ERROR:
-            messagebus.broadcast('task-stopped', job);
+            messages.send('task-stopped', job);
             break;
     }
 }
@@ -104,7 +103,7 @@ function onSocketOpen(event) {
     if (job) {
         task.job = job;
         task.start();
-        messagebus.broadcast('task-created', task.job);
+        messages.send('task-created', task.job);
     }
     else
         task.quit();
@@ -125,7 +124,7 @@ function onSocketClose(event) {
         case JobStatus.CLOSING:
         case JobStatus.STOPPED:
             task.update({ status: JobStatus.CANCELLED });
-            messagebus.broadcast('task-stopped', task.job);
+            messages.send('task-stopped', task.job);
             break;
     }
 
@@ -133,7 +132,7 @@ function onSocketClose(event) {
 }
 
 function onSocketError(event) {
-    messagebus.broadcast('task-error', 'error: ' + event.target.url);
+    messages.send('task-error', 'error: ' + event.target.url);
 }
 
 function onSocketMessage(event) {
@@ -156,50 +155,54 @@ function onSocketMessage(event) {
     }
 }
 
-var api = {
-    config: config,
+function onJobAvailable() {
+    establishConnection();
+}
 
-    init: function(configs) {
-        var pref = preferences.get('notify');
-        preferences.set('notify', 0);
-        for (var i = 0; i < configs.length; i++) {
-            var job = manager.init(configs[i]);
-            broadcastStatus(job);
+function onJobResumed(job) {
+    sendCommand(job, 'start');
+}
+
+function onJobPaused(job) {
+    sendCommand(job, 'stop');
+}
+
+function onJobStopped(job) {
+    sendCommand(job, 'abort');
+}
+
+function onSettingsChanged(diff) {
+    for (var k in diff.values) {
+        switch (k) {
+            case 'verbose':
+                config.verbose = diff.values[k];
+                break;
         }
-        preferences.set('notify', pref);
-    },
-
-    debug: function() {
-        debugger;
     }
+}
+
+function initTasks(configs) {
+    var pref = preferences.get('notify');
+    preferences.set('notify', 0);
+    for (var i = 0; i < configs.length; i++) {
+        var job = manager.init(configs[i]);
+        broadcastStatus(job);
+    }
+    preferences.set('notify', pref);
+}
+
+return {
+    bind: function() {
+        messages.listen({
+            'job-available': onJobAvailable,
+            'job-resumed': onJobResumed,
+            'job-paused': onJobPaused,
+            'job-stopped': onJobStopped,
+            'change-settings': onSettingsChanged
+        });
+    },
+    config: config,
+    init: initTasks
 };
 
-messagebus.add({
-    'name': 'task',
-    'interface': function() {
-        return utils.merge({}, api);
-    },
-    'job-available': function() {
-        establishConnection();
-    },
-    'job-resumed': function(job) {
-        sendCommand(job, 'start');
-    },
-    'job-paused': function(job) {
-        sendCommand(job, 'stop');
-    },
-    'job-stopped': function(job) {
-        sendCommand(job, 'abort');
-    },
-    'change-settings': function(diff) {
-        for (var k in diff.values) {
-            switch (k) {
-                case 'verbose':
-                    config.verbose = diff.values[k];
-                    break;
-            }
-        }
-    }
 });
-
-})(global.extension);

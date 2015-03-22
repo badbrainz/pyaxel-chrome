@@ -1,12 +1,11 @@
-(function(ns) {
+(function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
-
-var preferences = messagebus.query('preferences');
-var script = messagebus.query('script');
-var manager = messagebus.query('manager');
-var sync = messagebus.query('sync');
+var messages = extension.messages;
+var utils = extension.utils;
+var preferences = extension.preferences;
+var script = extension.script;
+var manager = extension.manager;
+var sync = extension.sync;
 
 var onready = utils.event();
 
@@ -70,7 +69,8 @@ var scriptcommands = {
     }
 };
 
-function openUniqueTab(url, options) {
+function openExtensionView(fn, options) {
+    var url = chrome.runtime.getURL('view/' + fn);
     chrome.tabs.query({url: url}, function(tabs) {
         if (tabs[0]) {
             chrome.windows.update(tabs[0].windowId, {focused: true}, function() {
@@ -95,9 +95,9 @@ function openUniqueTab(url, options) {
 
 function displayDownloads() {
     if (preferences.get('display'))
-        openUniqueTab(global.extension.source + 'views/downloads.html');
+        openUniqueTab('downloads.html');
     else
-        openUniqueTab(global.extension.source + 'views/popup.html', {
+        openUniqueTab('popup.html', {
             type: 'popup',
             width: preferences.get('popup_width'),
             height: preferences.get('popup_height')
@@ -105,12 +105,11 @@ function displayDownloads() {
 }
 
 function displaySettings() {
-    openUniqueTab(global.extension.source + 'views/options.html');
+    openUniqueTab('options.html');
 }
 
 function displayConfiguration(url) {
-    var path = utils.format('{0}?url={1}',
-        global.extension.source + 'views/configure.html', window.encodeURIComponent(url));
+    var path = utils.format('{0}?url={1}', 'configure.html', window.encodeURIComponent(url));
     openUniqueTab(path, {
         type: 'popup',
         width: preferences.get('config_width'),
@@ -163,6 +162,11 @@ function handleSettingsChanged(diff) {
     }
 }
 
+function updateAccount() {
+    sync.pull(utils.merge(filters.get(), preferences.get()));
+    sync.push(utils.merge(filters.getChanges(), preferences.getChanges()));
+}
+
 function onRuntimeInstalled() {
     script.install(['default']);
     script.installModules(['deprecated', 'dllib', 'strlib']);
@@ -175,13 +179,13 @@ function onRuntimeUpdated(v) {
 chrome.runtime.onInstalled.addListener(function(details) {
     onready.addListener(function() {
         if (details.reason === 'install')
-            messagebus.broadcast('install-runtime');
+            messages.send('install-runtime');
         if (details.reason === 'update')
-            messagebus.broadcast('update-runtime');
+            messages.send('update-runtime');
     });
 });
 
-global['exports'] = {
+window.exports = {
     'addDownload': function(config, ready) {
         manager.addJob(config, ready);
     },
@@ -215,7 +219,7 @@ global['exports'] = {
     },
 
     'getFilesystem': function() {
-        return messagebus.query('filesystem');
+        return extension.filesystem;
     },
 
     'getDownloads': function() {
@@ -226,33 +230,65 @@ global['exports'] = {
     'displayConfiguration': displayConfiguration
 };
 
-messagebus.query('storage').local.get(function(data) {
-    var filesystem = messagebus.query('filesystem');
-    var indicator = messagebus.query('indicator');
-    var history = messagebus.query('history');
-    var task = messagebus.query('task');
+utils.series([
+    function(pass) {
+        extension.storage.local.get('settings/user', function(o) {
+            if ('settings/user' in o)
+                preferences.set(o['settings/user']);
+            pass();
+        });
+    },
+    function(pass) {
+        extension.filesystem.ls('scripts/', function(a) {
+            var files = {};
+            function read(fn) {
+                return function(pass) {
+                    extension.filesystem.read('scripts/' + fn, 'UTF-8', function(d) {
+                        files[fn] = d;
+                        pass();
+                    });
+                }
+            }
+            var procs = [];
+            for (var i = 0; i < a.length; i++)
+                procs.push(read(a[i]));
+            utils.process(procs, function() {
+                extension.sync.pull(utils.merge(files, preferences.get()));
+                extension.sync.push(utils.merge(files, preferences.getChanges()));
+                pass();
+            });
+        });
+    }],
+    function() {
+        extension.task.config.verbose = preferences.get('verbose');
+        extension.task.config.max = preferences.get('downloads');
+        extension.indicator.config.onclick = displayDownloads;
+        extension.filesystem.config.directory = 'scripts';
+        extension.history.config.directory = 'history';
+    
+        //messages.send('sync-data', data);
+        chrome.storage.onChanged.addListener(handleRemoteSync);
+        chrome.runtime.onMessage.addListener(handleMessages);
+        chrome.runtime.onMessageExternal.addListener(handleMessages);
+        chrome.omnibox.onInputEntered.addListener(parseOmniboxInput);
+        extension.preferences.bind();
+        extension.indicator.bind();
+        extension.storage.bind();
+        extension.sync.bind();
+        extension.filesystem.bind();
+        extension.catalog.bind();
+        extension.history.bind();
+        extension.task.bind();
+        messages.listen({
+            'change-settings': handleSettingsChanged,
+            'install-runtime': onRuntimeInstalled,
+            'update-runtime': onRuntimeUpdated
+        });
+        
+        extension.history.view(extension.task.init);
+        updateContextMenus();
+        onready.fire();
+    }
+);
 
-    task.config.verbose = preferences.get('verbose');
-    task.config.max = preferences.get('downloads');
-    indicator.config.onclick = displayDownloads;
-    filesystem.config.directory = 'scripts';
-    history.config.directory = 'history';
-
-    messagebus.broadcast('sync-data', data);
-    chrome.storage.onChanged.addListener(handleRemoteSync);
-    chrome.runtime.onMessage.addListener(handleMessages);
-    chrome.runtime.onMessageExternal.addListener(handleMessages);
-    chrome.omnibox.onInputEntered.addListener(parseOmniboxInput);
-    messagebus.add({
-        'change-settings': handleSettingsChanged,
-        'install-runtime': onRuntimeInstalled,
-        'update-runtime': onRuntimeUpdated
-    });
-
-    sync.pull();
-    history.view(task.init);
-    updateContextMenus();
-    onready.fire();
-});
-
-})(global.extension);
+})();

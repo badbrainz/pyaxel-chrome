@@ -1,4 +1,4 @@
-(function(ns) {
+ext.define('extension.utils', function() {
 
 var rxmeta = /([.*:;'"!@#$%^&?\-+=<>\\\/~`|(){}\[\]])/g;
 var rxmetachars = /(\\[bcdfnrtvsw])/ig;
@@ -16,7 +16,7 @@ function expandWildcards(s) {
         s.split('*').map(escapeMetachars).join('(.*?)') : escapeMetachars(s));
 }
 
-var event = {
+var Event = {
     addListener: function(l) {
         this.removeListener(l);
         this.listeners.push(l);
@@ -25,38 +25,14 @@ var event = {
         var i = this.listeners.indexOf(l);
         if (i != -1) this.listeners.splice(i, 1);
     },
-    dispatch: function() {
-        for (var i = 0; i < this.listeners.length; i++)
-            this.listeners[i].apply(null, arguments);
-    },
     fire: function() {
         while (this.listeners.length)
             this.listeners.shift()();
-        this.addListener = api.echo();
+        this.addListener = echoFunction();
     }
 };
 
-var queue = {
-    put: function(item) {
-        this.list.push(item);
-    },
-    get: function() {
-        if (this.list.length) {
-            var item = this.list[this.space];
-            this.list[this.space] = null;
-            if (++this.space * 2 >= this.list.length) {
-                this.list.splice(0, this.space);
-                this.space = 0;
-            }
-            return item;
-        }
-    },
-    size: function() {
-        return this.list.length - this.space;
-    }
-};
-
-var timer = {
+var Timer = {
     start: function() {
         if (!this.enabled) {
             this.timestamp = Date.now();
@@ -77,7 +53,7 @@ var timer = {
     }
 };
 
-var opqueue = {
+var OpQueue = {
     measureLag: function() {
         var now = Date.now();
         var interval = now - this.tick;
@@ -100,212 +76,267 @@ var opqueue = {
         this.queue.push(func);
         var lag = this.measureLag();
         if (lag > 0 && this.timeout == null)
-            this.timeout = window.setTimeout(this.run, lag);
+            this.timeout = window.setTimeout(this.run.bind(this), lag);
         if (lag === 0)
             this.queue.shift()();
     },
     clear: function() {
         window.clearTimeout(this.timeout);
         this.timeout = null;
-        this.queue = [];
+        this.queue.splice(0, this.queue.length);
     }
 };
 
-var api = {
-    adapter: function(store, prefix) {
-        return {
-            set: function(k, v) {
-                if (typeof k == 'string') store.set(prefix + k, api.copy(v));
-                else store.set(k);
-            },
-            get: function(k) {
-                return api.copy(store.get(k ? prefix + k : null));
+var Queue = {
+    put: function(item) {
+        this.list.push(item);
+    },
+    get: function() {
+        if (this.list.length) {
+            var item = this.list[this.cursor];
+            this.list[this.cursor] = null;
+            if (++this.cursor * 2 >= this.list.length) {
+                this.list.splice(0, this.cursor);
+                this.cursor = 0;
             }
-        };
-    },
-
-    clone: function(a) {
-        return api.emulate(Object.create(Object.getPrototypeOf(a)), a);
-    },
-
-    copy: function(v) {
-        return typeof v == 'object' && v != null ?
-            JSON.parse(JSON.stringify(v)) : v;
-    },
-
-    date: function(tmpl) {
-        var a = new Date(), b = [
-            'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
-        ];
-        return api.format(tmpl, b[a.getMonth()], a.getDate(), a.getFullYear());
-    },
-
-    diff: function(o, d) {
-        var c = {added: {}, removed: [], values: {}};
-        for (var k in o) {
-            if (o[k].newValue != null) {
-                c.added[k] = o[k].newValue;
-                c.values[k] = o[k].newValue;
-                continue;
-            }
-            c.values[k] = d[k];
-            c.removed.push(k);
+            return item;
         }
-        return c;
     },
-
-    echo: function() {
-        return function(c) { c(); }
+    size: function() {
+        return this.list.length - this.cursor;
     },
+    peek: function(index) {
+        if (this.list.length)
+            return this.list[index || this.cursor];
+    },
+    clear: function() {
+        this.list = [];
+        this.cursor = 0;
+    }
+};
 
-    emulate: function(a, b) {
-        if (b) {
-            var c = Object.getOwnPropertyNames(b);
-            for (var i = 0; i < c.length; i++) {
-                var d = Object.getOwnPropertyDescriptor(b, c[i]);
-                if (d.value && api.type(d.value) == 'object')
-                    d.value = api.clone(d.value);
-                Object.defineProperty(a, c[i], d);
-            }
+function createAdapter(store, prefix) {
+    return {
+        set: function(k, v) {
+            if (typeof k == 'string') store.set(prefix + k, copyObject(v));
+            else store.set(k);
+        },
+        get: function(k) {
+            return copyObject(store.get(k ? prefix + k : null));
         }
-        return a;
-    },
+    };
+}
 
-    equals: function(a, b) {
-        return JSON.stringify(a) == JSON.stringify(b);
-    },
+function createEvent() {
+    return Object.create(Event, {
+        listeners: {value: []}
+    });
+}
 
-    event: function() {
-        return Object.create(event, { listeners: { value: [] } });
-    },
+function createOpqueue(unit, maxops) {
+    return Object.create(OpQueue, {
+        queue: {value: []},
+        operations: {value: 0, writable: true},
+        timeout: {value: null, writable: true},
+        tick: {value: 0, writable: true, enumerable: true},
+        unit: {value: unit},
+        maxops: {value: maxops}
+    });
+}
 
-    filter: function(o, l) {
-        var d = {}, e = Object.getOwnPropertyNames(o);
-        var k = Array.isArray(l) ? l : Object.keys(l);
-        for (var i = 0; i < e.length; i++) {
-            if (k.indexOf(e[i]) != -1)
-                Object.defineProperty(d, e[i], Object.getOwnPropertyDescriptor(o, e[i]));
+function createQueue() {
+    return Object.create(Queue, {
+        list: {value: []},
+        cursor: {value: 0, writable: true}
+    });
+}
+
+function createRegexp(s) {
+    return new RegExp(expandWildcards(s));
+}
+
+function createTimer(c, i) {
+    return Object.create(Timer, {
+        callback: {value: c, writable: true},
+        interval: {value: i, writable: true}
+    });
+}
+
+function cloneObject(a) {
+    return emulateObject(Object.create(Object.getPrototypeOf(a)), a);
+}
+
+function copyObject(v) {
+    return typeof v == 'object' && v != null ?
+        JSON.parse(JSON.stringify(v)) : v;
+}
+
+function dateString(tmpl) {
+    var a = new Date(), b = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return formatString(tmpl, b[a.getMonth()], a.getDate(), a.getFullYear());
+}
+
+function diffObject(o, d) {
+    var c = {added: {}, removed: [], values: {}};
+    for (var k in o) {
+        if (o[k].newValue != null) {
+            c.added[k] = o[k].newValue;
+            c.values[k] = o[k].newValue;
+            continue;
         }
-        return d;
-    },
+        c.values[k] = d[k];
+        c.removed.push(k);
+    }
+    return c;
+}
 
-    format: function() {
-        var v = Array.prototype.slice.call(arguments, 1);
-        return arguments[0].replace(/{(\d+)}/g, function(s, x) {
-            return v[x];
-        });
-    },
+function echoFunction() {
+    return function(c) { c(); }
+}
 
-    http: function(url, type, callback) {
-        var req = new XMLHttpRequest();
-        req.responseType = type;
-        req.timeout = 10000;
-        req.onload = function() {
-            if (req.readyState === XMLHttpRequest.DONE)
-                callback(req.status === 200 ? req.response : null);
-        };
-        req.onerror = req.ontimeout = function() { callback(null); };
-        req.open('GET', url, true);
-        req.send();
-    },
-
-    iterate: function(a, b, c) {
-        var f = Array.prototype.slice.call(a);
-        (function p() {
-            f.length ? b(f.shift(), p) : c && c();
-        })();
-    },
-
-    merge: function(a, b) {
-        for (var k in b) a[k] = b[k]; return a;
-    },
-
-    object: function(k, v) {
-        if (typeof k == 'string') {
-            var o = {}; o[k] = v;
-            return o;
+function emulateObject(a, b) {
+    if (b) {
+        var c = Object.getOwnPropertyNames(b);
+        for (var i = 0; i < c.length; i++) {
+            var d = Object.getOwnPropertyDescriptor(b, c[i]);
+            if (d.value && typeCheck(d.value) == 'object')
+                d.value = cloneObject(d.value);
+            Object.defineProperty(a, c[i], d);
         }
-        return k;
-    },
+    }
+    return a;
+}
 
-    opqueue: function(unit, maxops) {
-        return Object.create(opqueue, {
-            queue: { value: [] },
-            operations: { value: 0 },
-            timeout: { value: null },
-            tick: { value: global.extension.started },
-            unit: { value: unit },
-            maxops: { value: maxops }
-        });
-    },
+function equalsObject(a, b) {
+    return JSON.stringify(a) == JSON.stringify(b);
+}
 
-    process: function(a, b, c) {
-        var d = arguments.length > 2 ? b : function() {};
-        var e = arguments.length > 2 ? c : b;
-        var f = Array.prototype.slice.call(a), l = f.length;
-        var p = function() { d && d.apply(d, arguments); --l == 0 && e && e(); };
-        window.setTimeout(function() {
-            l == 0 && e && e();
-            while (f[0]) { f.shift()(p); }
-        }, 0);
-    },
+function filterObject(o, l) {
+    var d = {}, e = Object.getOwnPropertyNames(o);
+    var k = Array.isArray(l) ? l : Object.keys(l);
+    for (var i = 0; i < e.length; i++) {
+        if (k.indexOf(e[i]) != -1)
+            Object.defineProperty(d, e[i], Object.getOwnPropertyDescriptor(o, e[i]));
+    }
+    return d;
+}
 
-    queue: function() {
-        return Object.create(queue, {
-            list: { value: [] },
-            space: { value: 0, writable: true }
-        });
-    },
+function formatString() {
+    var v = Array.prototype.slice.call(arguments, 1);
+    return arguments[0].replace(/{(\d+)}/g, function(s, x) {
+        return v[x];
+    });
+}
 
-    regexp: function(s) {
-        return new RegExp(expandWildcards(s));
-    },
+function getValues(o) {
+    var l = [];
+    for (var k in o) l.push(o[k]);
+    return l;
+}
 
-    scan: function(a, b) {
-        var o = {};
-        for (var k in b) o[k] = k in a ? a[k] : b[k];
+function httpGet(url, type, callback) {
+    var req = new XMLHttpRequest();
+    req.responseType = type;
+    req.timeout = 10000;
+    req.onload = function() {
+        if (req.readyState === XMLHttpRequest.DONE)
+            callback(req.status === 200 ? req.response : null);
+    };
+    req.onerror = req.ontimeout = function() { callback(null); };
+    req.open('GET', url, true);
+    req.send();
+}
+
+function iterateFunctions(a, b, c) {
+    var f = Array.prototype.slice.call(a);
+    (function p() {
+        f.length ? b(f.shift(), p) : c && c();
+    })();
+}
+
+function mergeObject(a, b) {
+    for (var k in b) a[k] = b[k]; return a;
+}
+
+function objectPair(k, v) {
+    if (typeof k == 'string') {
+        var o = {}; o[k] = v;
         return o;
-    },
-
-    similarity: function(a, b) {
-        return function(c) { return c[a] === b; }
-    },
-
-    time: function() {
-        var t = new Date();
-        return t.getHours() + ':' + t.getMinutes() + ':' + ('00' + t.getSeconds()).slice(-2);
-    },
-
-    timer: function(c, i) {
-        return Object.create(timer, {
-            callback: { value: c },
-            interval: { value: i }
-        });
-    },
-
-    type: function(a) {
-        var b = /(undefined|string|number|boolean)/.exec(typeof a);
-        if (b) return b[1];
-        return /\b([a-z]+).$/i.exec(Object.prototype.toString.call(a).toLowerCase())[1];
-    },
-
-    uri: function(str) {
-        var p = str.match(rxuri);
-        return {
-            host: p[4],
-            protocol: p[2],
-            path: p[5]
-        };
-    },
-
-    values: function(o) {
-        var l = [];
-        for (var k in o) l.push(o[k]);
-        return l;
     }
+    return k;
+}
+
+function processFunctions(a, b, c) {
+    var d = arguments.length > 2 ? b : function() {};
+    var e = arguments.length > 2 ? c : b;
+    var f = Array.prototype.slice.call(a), l = f.length;
+    var p = function() { d && d.apply(d, arguments); --l == 0 && e && e(); };
+    window.setTimeout(function() {
+        l == 0 && e && e();
+        while (f[0]) { f.shift()(p); }
+    }, 0);
+}
+
+function scanObject(a, b) {
+    var o = {};
+    for (var k in b) o[k] = k in a ? a[k] : b[k];
+    return o;
+}
+
+function similarObject(a, b) {
+    return function(c) { return c[a] === b; }
+}
+
+function timeString() {
+    var t = new Date();
+    return t.getHours() + ':' + t.getMinutes() + ':' + ('00' + t.getSeconds()).slice(-2);
+}
+
+function typeCheck(a) {
+    var b = /(undefined|string|number|boolean)/.exec(typeof a);
+    if (b) return b[1];
+    return /\b([a-z]+).$/i.exec(Object.prototype.toString.call(a).toLowerCase())[1];
+}
+
+function uri(str) {
+    var p = str.match(rxuri);
+    return {
+        host: p[4],
+        protocol: p[2],
+        path: p[5]
+    };
+}
+
+return {
+    adapter: createAdapter,
+    clone: cloneObject,
+    copy: copyObject,
+    date: dateString,
+    diff: diffObject,
+    echo: echoFunction,
+    emulate: emulateObject,
+    equals: equalsObject,
+    event: createEvent,
+    filter: filterObject,
+    format: formatString,
+    http: httpGet,
+    iterate: iterateFunctions,
+    merge: mergeObject,
+    object: objectPair,
+    opqueue: createOpqueue,
+    process: processFunctions,
+    queue: createQueue,
+    regexp: createRegexp,
+    scan: scanObject,
+    similarity: similarObject,
+    time: timeString,
+    timer: createTimer,
+    type: typeCheck,
+    uri: uri,
+    values: getValues
 };
 
-ns.utils = api;
-
-})(global.extension);
+});

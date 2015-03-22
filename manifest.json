@@ -13,6 +13,7 @@
     "background":{
         "scripts":[
             "global.js",
+            "ext.js",
             "background.js"
         ]
     },

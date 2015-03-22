@@ -1,9 +1,8 @@
-(function(ns) {
+ext.define('extension.socket', function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
-
-var preferences = messagebus.query('preferences');
+var messages = extension.messages;
+var utils = extension.utils;
+var preferences = extension.preferences;
 
 var uid = 0;
 
@@ -12,23 +11,14 @@ function getAddress() {
         preferences.get('host'), preferences.get('port'));
 }
 
-var api = {
-    create: function() {
-        var ws = new WebSocket(getAddress());
-        ws.id = uid++;
-        return ws;
-    },
+function createSocket() {
+    var ws = new WebSocket(getAddress());
+    ws.id = uid++;
+    return ws;
+}
 
-    debug: function() {
-        debugger;
-    }
+return {
+    create: createSocket
 };
 
-messagebus.add({
-    'name': 'sockets',
-    'interface': function() {
-        return utils.merge({}, api);
-    }
 });
-
-})(global.extension);

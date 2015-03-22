@@ -1,7 +1,7 @@
-(function(ns) {
+ext.define('extension.catalog', function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
+var messages = extension.messages;
+var utils = extension.utils;
 
 var catalogs = {
     all: {},
@@ -10,53 +10,58 @@ var catalogs = {
     unassigned: {}
 };
 
-var api = {
-    add: function(item) {
-        catalogs.all[item.id] = item;
-        catalogs.unassigned[item.id] = item;
-    },
+function onTaskCreated(task) {
+    delete catalogs.unassigned[task.id];
+}
 
-    remove: function(id) {
-        for (var k in catalogs)
-            delete catalogs[k][id];
-    },
+function onTaskStarted(task) {
+    catalogs.started[task.id] = catalogs.all[task.id];
+}
 
-    search: function(key, id) {
-        if (key in catalogs) {
-            if (id == null)
-                return utils.values(catalogs[key]);
-            if (typeof id === 'function')
-                return utils.values(catalogs[key]).some(id);
-            return catalogs[key][id];
-        }
-        return api.search('all', key);
-    },
+function onTaskCompleted(task) {
+    catalogs.stopped[task.id] = catalogs.all[task.id];
+    delete catalogs.started[task.id];
+}
 
-    debug: function() {
-        debugger;
+function onTaskStopped(task) {
+    delete catalogs.unassigned[task.id];
+    delete catalogs.started[task.id];
+    catalogs.stopped[task.id] = catalogs.all[task.id];
+}
+
+function searchItem(key, id) {
+    if (key in catalogs) {
+        if (id == null)
+            return utils.values(catalogs[key]);
+        if (typeof id === 'function')
+            return utils.values(catalogs[key]).some(id);
+        return catalogs[key][id];
     }
+    return searchItem('all', key);
+}
+
+function removeItem(id) {
+    for (var k in catalogs)
+        delete catalogs[k][id];
+}
+
+function addItem(item) {
+    catalogs.all[item.id] = item;
+    catalogs.unassigned[item.id] = item;
+}
+
+return {
+    bind: function() {
+        messages.listen({
+            'task-created': onTaskCreated,
+            'task-started': onTaskStarted,
+            'task-completed': onTaskCompleted,
+            'task-stopped': onTaskStopped
+        });
+    },
+    add: addItem,
+    remove: removeItem,
+    search: searchItem
 };
 
-messagebus.add({
-    'name': 'catalog',
-    'interface': function() {
-        return utils.merge({}, api);
-    },
-    'task-created': function(task) {
-        delete catalogs.unassigned[task.id];
-    },
-    'task-started': function(task) {
-        catalogs.started[task.id] = catalogs.all[task.id];
-    },
-    'task-completed': function(task) {
-        catalogs.stopped[task.id] = catalogs.all[task.id];
-        delete catalogs.started[task.id];
-    },
-    'task-stopped': function(task) {
-        delete catalogs.unassigned[task.id];
-        delete catalogs.started[task.id];
-        catalogs.stopped[task.id] = catalogs.all[task.id];
-    }
 });
-
-})(global.extension);

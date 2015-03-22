@@ -1,9 +1,8 @@
-(function(ns) {
+ext.define('extension.filesystem', function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
-
-var storage = messagebus.query('storage');
+var messages = extension.messages;
+var utils = extension.utils;
+var storage = extension.storage;
 
 var config = Object.seal({
     directory: ''
@@ -37,82 +36,80 @@ function stringify(file, callback) {
     reader.readAsText(file, 'UTF-8');
 }
 
-var api = {
-    config: config,
+function listFiles(dir, callback) {
+    storage.local.get(function(obj) {
+        var key = fixpath(dir), result = [];
+        for (var k in obj)
+            k.indexOf(key) === 0 && result.push(strippath(k));
+        callback(result);
+    });
+}
 
-    read: function(path, encoding, callback) {
-        var key = fixpath(path);
-        storage.local.get(key, function(obj) {
-            callback(obj[key]);
-        });
-    },
+function makeDirectory(dir, callback) {
+    callback();
+}
 
-    write: function(path, data, callback) {
-        var key = fixpath(path);
-        function write(str) {
-            storage.local.set(utils.object(key, str), function() {
-                var err = error();
-                callback && callback(err);
-                if (!err) {
-                    var changes = utils.object(key, { newValue: str });
-                    changes = utils.diff(changes, utils.object(key, str));
-                    messagebus.broadcast('change-settings', changes);
-                }
-            });
+function removeFile(path, callback) {
+    var key = fixpath(path);
+    storage.local.remove(key, function() {
+        var err = error();
+        callback && callback(err);
+        if (!err) {
+            var changes = utils.object(key, {});
+            changes = utils.diff(changes, {});
+            messages.send('change-settings', changes);
         }
-        if (typeof data === 'string')
-            write(data);
-        else
-            stringify(data, write);
-    },
+    });
+}
 
-    mkdir: function(dir, callback) {
-        callback();
-    },
+function readFile(path, encoding, callback) {
+    var key = fixpath(path);
+    storage.local.get(key, function(obj) {
+        callback(obj[key]);
+    });
+}
 
-    remove: function(path, callback) {
-        var key = fixpath(path);
-        storage.local.remove(key, function() {
+function writeFile(path, data, callback) {
+    var key = fixpath(path);
+    function write(str) {
+        storage.local.set(utils.object(key, str), function() {
             var err = error();
             callback && callback(err);
             if (!err) {
-                var changes = utils.object(key, {});
-                changes = utils.diff(changes, {});
-                messagebus.broadcast('change-settings', changes);
+                var changes = utils.object(key, { newValue: str });
+                changes = utils.diff(changes, utils.object(key, str));
+                messages.send('change-settings', changes);
+            }
+        });
+    }
+    if (typeof data === 'string')
+        write(data);
+    else
+        stringify(data, write);
+}
+
+return {
+    bind: function() {
+        messages.listen({
+            'sync-data': function(data) {
+                var rx = /^(scripts|modules)\/.+$/;
+                for (var k in data) {
+                    if (!rx.test(k))
+                        continue;
+                    if (data[k] != null)
+                        writeFile(k, data[k]);
+                    else
+                        removeFile(k);
+                }
             }
         });
     },
-
-    ls: function(dir, callback) {
-        storage.local.get(function(obj) {
-            var key = fixpath(dir), result = [];
-            for (var k in obj)
-                k.indexOf(key) === 0 && result.push(strippath(k));
-            callback(result);
-        });
-    },
-
-    debug: function() {
-        debugger;
-    }
+    config: config,
+    read: readFile,
+    write: writeFile,
+    mkdir: makeDirectory,
+    remove: removeFile,
+    ls: listFiles
 };
 
-messagebus.add({
-    'name': 'filesystem',
-    'interface': function() {
-        return utils.merge({}, api);
-    },
-    'sync-data': function(data) {
-        var rx = /^(scripts|modules)\/.+$/;
-        for (var k in data) {
-            if (!rx.test(k))
-                continue;
-            if (data[k] != null)
-                api.write(k, data[k]);
-            else
-                api.remove(k);
-        }
-    }
 });
-
-})(global.extension);

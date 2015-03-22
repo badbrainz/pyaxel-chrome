@@ -1,9 +1,8 @@
-(function(ns) {
+ext.define('extension.sync', function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
-
-var storage = messagebus.query('storage');
+var messages = extension.messages;
+var utils = extension.utils;
+var storage = extension.storage;
 
 var queue = utils.opqueue(60000, storage.WRITE_OPERATIONS_PER_MINUTE);
 
@@ -57,7 +56,7 @@ function filterChanges(o) {
 
 function updateAccount(o) {
     if (Object.keys(o).length)
-        messagebus.broadcast('sync-data', o);
+        messages.send('sync-data', o);
 }
 
 function sendChanges(o) {
@@ -71,38 +70,41 @@ function retreiveChanges(o) {
     storage.remote.get(o, updateAccount);
 }
 
-var api = {
-    pull: function(data) {
-        var k = data;
-        switch (utils.type(k)) {
-            case 'object':
-                k = Object.keys(data);
-            case 'string':
-            case 'array':
-            case 'undefined':
-                retreiveChanges(k);
-                break;
-        }
-    },
-
-    push: function(data) {
-        sendChanges({ added: data, removed: [] });
-    },
-
-    merge: function(changes) {
-        var o = filterChanges(changes);
-        updateAccount(o);
+function pullChanges(data) {
+    var k = data;
+    switch (utils.type(k)) {
+        case 'object':
+            k = Object.keys(data);
+        case 'string':
+        case 'array':
+        case 'undefined':
+            retreiveChanges(k);
+            break;
     }
+}
+
+function pushChanges(data) {
+    sendChanges({ added: data, removed: [] });
+}
+
+function mergeChanges(changes) {
+    var o = filterChanges(changes);
+    updateAccount(o);
+}
+
+function onSettingsChanged(diff) {
+    sendChanges(diff);
+}
+
+return {
+    bind: function() {
+        messages.listen({
+            'change-settings': onSettingsChanged
+        });
+    },
+    pull: pullChanges,
+    push: pushChanges,
+    merge: mergeChanges
 };
 
-messagebus.add({
-    'name': 'sync',
-    'interface': function() {
-        return utils.merge({}, api);
-    },
-    'change-settings': function(diff) {
-        sendChanges(diff);
-    }
 });
-
-})(global.extension);

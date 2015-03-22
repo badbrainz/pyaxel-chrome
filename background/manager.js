@@ -1,10 +1,9 @@
-(function(ns) {
+ext.define('extension.manager', function() {
 
-var messagebus = ns.messagebus;
-var utils = ns.utils;
-
-var preferences = messagebus.query('preferences');
-var catalog = messagebus.query('catalog');
+var messages = extension.messages;
+var utils = extension.utils;
+var preferences = extension.preferences;
+var catalog = extension.catalog;
 
 var uid = 0;
 var queue = utils.queue();
@@ -47,125 +46,126 @@ function setupJob(config, ready) {
     job.date = utils.date('{0} {1}, {2}');
 
     catalog.add(job);
-    messagebus.broadcast('job-created', job);
+    messages.send('job-created', job);
 
     if (ready) {
         queue.put(job);
-        messagebus.broadcast('job-available');
+        messages.send('job-available');
     }
 }
 
-var api = {
-    addJob: function(config, ready) {
-        var cfg = utils.merge({}, config);
-        if (!cfg.url)
-            return;
+function addJob(config, ready) {
+    var cfg = utils.merge({}, config);
+    if (!cfg.url)
+        return;
 
-        cfg.origin = cfg.origin || cfg.url;
-        if (typeof cfg.origin !== 'string')
-            return;
+    cfg.origin = cfg.origin || cfg.url;
+    if (typeof cfg.origin !== 'string')
+        return;
 
-        var uri = utils.uri(cfg.origin);
-        if (!uri.protocol || !uri.host || !uri.path)
-            return;
+    var uri = utils.uri(cfg.origin);
+    if (!uri.protocol || !uri.host || !uri.path)
+        return;
 
-        if (!/https?/.test(uri.protocol))
-            return;
+    if (!/https?/.test(uri.protocol))
+        return;
 
-        var func = utils.similarity('origin', cfg.origin);
-        if (catalog.search(func))
-            return;
+    var func = utils.similarity('origin', cfg.origin);
+    if (catalog.search(func))
+        return;
 
-        if (/\.meta(4|link)$/.test(uri.path)) {
-            utils.http(cfg.origin, 'document', function(xml) {
-                if (xml == null) {
-                    console.warn('[%s] request error: %s', utils.time(), cfg.origin);
-                    return;
-                }
-                var files = parseMetalinkXML(xml);
-                for (var i = 0; i < files.length; i++)
-                    setupJob(files[i], ready);
-            });
-        }
-        else
-            setupJob(cfg, ready);
-    },
-
-    getJob: function() {
-        var job = queue.get();
-        if (job && !catalog.search('unassigned', job.id))
-            return api.getJob();
-        return job;
-    },
-
-    retryJob: function(id) {
-        var job = catalog.search('stopped', id) || catalog.search('unassigned', id);
-        if (job) {
-            catalog.remove(job.id);
-            messagebus.broadcast('job-removed', job);
-            api.addJob(job, true);
-        }
-    },
-
-    stopJob: function(id) {
-        var job = catalog.search('started', id);
-        if (job)
-            messagebus.broadcast('job-stopped', job);
-    },
-
-    pauseJob: function(id) {
-        var job = catalog.search('started', id);
-        if (job)
-            messagebus.broadcast('job-paused', job);
-    },
-
-    resumeJob: function(id) {
-        var job = catalog.search('started', id);
-        if (job)
-            messagebus.broadcast('job-resumed', job);
-    },
-
-    removeJob: function(id) {
-        var job = catalog.search('stopped', id) || catalog.search('unassigned', id);
-        if (job) {
-            catalog.remove(job.id);
-            messagebus.broadcast('job-removed', job);
-        }
-        return job;
-    },
-
-    purgeJobs: function() {
-        var jobs = catalog.search('stopped');
-        for (var i = 0; i < jobs.length; i++) {
-            catalog.remove(jobs[i].id);
-            messagebus.broadcast('job-removed', jobs[i]);
-        }
-    },
-
-    searchJobs: function(status) {
-        return catalog.search(status);
-    },
-
-    jobsQueued: function() {
-        return queue.size();
-    },
-
-    init: function(config) {
-        var job = createJob(config);
-        catalog.add(job);
-        return job;
-    },
-
-    debug: function() {
-        debugger;
+    if (/\.meta(4|link)$/.test(uri.path)) {
+        utils.http(cfg.origin, 'document', function(xml) {
+            if (xml == null) {
+                console.warn('[%s] request error: %s', utils.time(), cfg.origin);
+                return;
+            }
+            var files = parseMetalinkXML(xml);
+            for (var i = 0; i < files.length; i++)
+                setupJob(files[i], ready);
+        });
     }
+    else
+        setupJob(cfg, ready);
+}
+
+function getJob() {
+    var job = queue.get();
+    if (job && !catalog.search('unassigned', job.id))
+        return getJob();
+    return job;
+}
+
+function retryJob(id) {
+    var job = catalog.search('stopped', id) || catalog.search('unassigned', id);
+    if (job) {
+        catalog.remove(job.id);
+        messages.send('job-removed', job);
+        addJob(job, true);
+    }
+}
+
+function stopJob(id) {
+    var job = catalog.search('started', id);
+    if (job)
+        messages.send('job-stopped', job);
+}
+
+function pauseJob(id) {
+    var job = catalog.search('started', id);
+    if (job)
+        messages.send('job-paused', job);
+}
+
+function resumeJob(id) {
+    var job = catalog.search('started', id);
+    if (job)
+        messages.send('job-resumed', job);
+}
+
+function removeJob(id) {
+    var job = catalog.search('stopped', id) || catalog.search('unassigned', id);
+    if (job) {
+        catalog.remove(job.id);
+        messages.send('job-removed', job);
+    }
+    return job;
+}
+
+function purgeJobs() {
+    var jobs = catalog.search('stopped');
+    for (var i = 0; i < jobs.length; i++) {
+        catalog.remove(jobs[i].id);
+        messages.send('job-removed', jobs[i]);
+    }
+}
+
+function searchJobs(status) {
+    return catalog.search(status);
+}
+
+function jobsQueued() {
+    return queue.size();
+}
+
+function initJob(config) {
+    var job = createJob(config);
+    catalog.add(job);
+    return job;
+}
+
+return {
+    addJob: addJob,
+    getJob: getJob,
+    retryJob: retryJob,
+    stopJob: stopJob,
+    pauseJob: pauseJob,
+    resumeJob: resumeJob,
+    removeJob: removeJob,
+    purgeJobs: purgeJobs,
+    searchJobs: searchJobs,
+    jobsQueued: jobsQueued,
+    init: initJob
 };
 
-messagebus.add({
-    'name': 'manager',
-    'interface': function() {
-        return utils.merge({}, api);
-    }
 });
-
-})(global.extension);
