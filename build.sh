@@ -1,63 +1,78 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-# packer used: Google Chrome
-# compressor used: Google Closure Compiler
-# https://developers.google.com/closure/compiler/
+set -o errexit
+set -o pipefail
+set -o nounset
+#set -o xtrace
 
 clear
 
-revision=`hg parent --template '/* revision {node} */'`
+revision=`hg parent --template '{node}'`
 
-builddir=build
-tempdir=`mktemp -d`
+dir_build="release"
+dir_data=".data"
+dir_temp="${dir_data}/temp"
+dir_profile="${dir_data}/profile"
 
-chromiumbin=`which google-chrome`
-compiler=`which compiler.jar`
+bin_chromium=$(type -p google-chrome)
 
-packext=0
-clean=0
-debug=0
-run=0
+pack_ext=0
+clean_dir=0
+run_ext=0
 
-ccflags=("--language_in ECMASCRIPT5" "--warning_level VERBOSE")
-ccflags+=("--jscomp_warning visibility" "--jscomp_error missingProperties")
-ccflags+=("--externs extern/*.js")
-
-crflags=("--pack-extension=$builddir")
-if [ -e $builddir.pem ]; then
-    crflags+=("--pack-extension-key=$builddir.pem")
+flags_ct=("--no-first-run" "--prerender=enabled")
+flags_cr=("--pack-extension=${dir_build}")
+if [ -e "${dir_build}.pem" ]; then
+    flags_cr+=("--pack-extension-key=${dir_build}.pem")
 fi
 
-background=(core.js utils.js preferences.js indicator.js storage.js sync.js)
-background+=(filesystem.js script.js catalog.js manager.js history.js socket.js task.js main.js)
-background=( ${background[@]/#/background/} )
-resources=(graph scripts views background/global.js)
+files_src=(graph/
+           views/
+           scripts/
+           background/global.js)
 
-isDirty() {
-    return `hg st ${!1} | grep -q .`
+files_background=(background/core.js
+                  background/utils.js
+                  background/preferences.js
+                  background/indicator.js
+                  background/storage.js
+                  background/sync.js
+                  background/filesystem.js
+                  background/script.js
+                  background/catalog.js
+                  background/manager.js
+                  background/history.js
+                  background/socket.js
+                  background/task.js
+                  background/main.js)
+
+# source config
+if [ -f conf ]; then
+    . conf
+fi
+
+isdirty() {
+    return `hg st -mard $1 | grep -q .`
 }
 
-concatScripts() {
+addrevision () {
+    echo
+    echo "adding revision number"
+    echo $1 > $2/REVISION
+}
+
+compilescripts() {
     echo
     echo "compiling $2: ${!1}"
-    if ! isDirty ${!1}; then
-        echo "$revision" > $2
+    if [ -e $2 ]; then
+        echo "file overwritten: $2"
     fi
     for i in ${!1}; do
         cat $i >> $2
     done
 }
 
-optimizeScripts() {
-    echo
-    echo "compiling $2: ${!1}"
-    if ! isDirty ${!1}; then
-        echo "$revision" > $2
-    fi
-    echo `java -jar $compiler ${ccflags[@]} --js ${!1}` >> $2
-}
-
-linkResources() {
+linkresources() {
     echo
     echo "linking: "${!1}
     for i in ${!1}; do
@@ -65,81 +80,83 @@ linkResources() {
     done
 }
 
-writeManifest() {
+writemanifest() {
     echo
-    echo "copying manifest"
+    echo "writing manifest"
     cp manifest.json $1
 }
 
-packExtension() {
+buildextension() {
+    echo
+    echo "building extension"
+    cp -rL $1 $2
+}
+
+packextension() {
+    echo
     echo "packing extension..."
-    if [ -x $chromiumbin ]; then
-        $chromiumbin ${crflags[@]} $1
+    if [ "${bin_chromium}" ]; then
+        "${bin_chromium}" ${flags_cr[@]} $1
     fi
-    (cd $1 && zip -r --filesync ../$1.zip .)
+    (cd $1 && zip -vr --filesync ../$1.zip .)
+    echo "-------"
+    du -b $1.zip
+    zip -T $1.zip
 }
 
-runExtension() {
-    local usrdatadir=`mktemp -d`
-    $chromiumbin --user-data-dir=$usrdatadir --no-first-run --load-extension=$1
-    cleanup $usrdatadir
+runextension() {
+    if [ "${bin_chromium}" ]; then
+        echo
+        echo "running extension..."
+        "${bin_chromium}" ${flags_ct[@]} --load-extension="$1" --user-data-dir="$2"
+    fi
 }
 
-init() {
-    if [ -d $1 ]; then
-        rm -rf $1
-    fi
+initdir() {
+    echo
+    echo "initializing $1/"
+    mkdir -p $1
+    rm -rf $1/*
 }
 
 cleanup() {
+    echo
+    echo "removing $1/"
     rm -rf $1
 }
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        pack )
-            packext=1
-            ;;
-        clean )
-            clean=1
-            ;;
-        debug )
-            debug=1
-            ccflags+=("--define DEBUG=false")
-            ccflags+=("--compilation_level ADVANCED_OPTIMIZATIONS")
-            ;;
-        run )
-            run=1
-            ;;
-        * )
-            ;;
+         pack ) pack_ext=1;;
+        clean ) clean_dir=1;;
+          run ) run_ext=1;;
+            * ) ;;
     esac
     shift
 done
 
-init $builddir
-if [ $clean -eq 1 ]; then
+cleanup ${dir_build}
+if [ ${clean_dir} -eq 1 ]; then
+    cleanup ${dir_data}
     exit 0
 fi
 
-if [ $debug -eq 1 ]; then
-    concatScripts background[@] $tempdir/background.js
-else
-    concatScripts background[@] $tempdir/background.js
+initdir ${dir_temp}
+compilescripts files_background[@] ${dir_temp}/background.js
+linkresources files_src[@] ${dir_temp}
+writemanifest ${dir_temp}
+buildextension ${dir_temp} ${dir_build}
+
+if ! isdirty "."; then
+    addrevision "${revision}" ${dir_build}
 fi
 
-linkResources resources[@] $tempdir
-
-writeManifest $tempdir
-
-cp -rL $tempdir $builddir
-
-cleanup $tempdir
-
-if [ $packext -eq 1 ]; then
-    packExtension $builddir
+if [ ${pack_ext} -eq 1 ]; then
+    packextension ${dir_build}
 fi
 
-if [ $run -eq 1 ]; then
-    runExtension $builddir
+if [ ${run_ext} -eq 1 ]; then
+    runextension ${dir_build} ${dir_profile}
 fi
+
+exit 0
