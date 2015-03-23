@@ -5,10 +5,7 @@ var utils = extension.utils;
 var storage = extension.storage;
 
 var records = {};
-
-var config = Object.seal({
-    directory: ''
-});
+var directory = 'history/';
 
 function hash(str) {
     var hash = 5381;
@@ -18,7 +15,7 @@ function hash(str) {
 }
 
 function id(item) {
-    return config.directory + '/' + String(hash(item.origin));
+    return directory + String(hash(item.origin));
 }
 
 function addItem(item) {
@@ -44,9 +41,9 @@ function searchItems(status, callback) {
 
 function viewItems(callback) {
     storage.local.get(function(obj) {
-        var results = [], key = config.directory + '/';
+        var results = [];
         for (var k in obj)
-            k.indexOf(key) === 0 && results.push(obj[k]);
+            k.indexOf(directory) === 0 && results.push(obj[k]);
         callback(results);
     });
 }
@@ -68,7 +65,6 @@ return {
             'task-completed': onJobCreated
         });
     },
-    config: config,
     add: addItem,
     remove: removeItem,
     search: searchItems,
