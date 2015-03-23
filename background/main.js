@@ -117,13 +117,14 @@ function displayConfiguration(url) {
 }
 
 function updateContextMenus() {
-    chrome.contextMenus.removeAll();
-    if (preferences.get('contextmenu')) {
-        for (var i = 0; i < contextmenus.length; i++) {
-            delete contextmenus[i]['generatedId'];// WARN chrome adds this then throws WTF
-            chrome.contextMenus.create(contextmenus[i]);
+    chrome.contextMenus.removeAll(function() {
+        if (preferences.get('contextmenu')) {
+            for (var i = 0; i < contextmenus.length; i++) {
+                delete contextmenus[i]['generatedId'];// WARN chrome adds this then throws WTF
+                chrome.contextMenus.create(contextmenus[i]);
+            }
         }
-    }
+    });
 }
 
 function parseOmniboxInput(input, disposition) {
