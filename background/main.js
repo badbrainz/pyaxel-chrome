@@ -70,7 +70,7 @@ var scriptcommands = {
 };
 
 function openExtensionView(fn, options) {
-    var url = chrome.runtime.getURL('view/' + fn);
+    var url = chrome.runtime.getURL(fn);
     chrome.tabs.query({url: url}, function(tabs) {
         if (tabs[0]) {
             chrome.windows.update(tabs[0].windowId, {focused: true}, function() {
@@ -95,9 +95,9 @@ function openExtensionView(fn, options) {
 
 function displayDownloads() {
     if (preferences.get('display'))
-        openUniqueTab('downloads.html');
+        openExtensionView('downloads.html');
     else
-        openUniqueTab('popup.html', {
+        openExtensionView('popup.html', {
             type: 'popup',
             width: preferences.get('popup_width'),
             height: preferences.get('popup_height')
@@ -105,12 +105,12 @@ function displayDownloads() {
 }
 
 function displaySettings() {
-    openUniqueTab('options.html');
+    openExtensionView('options.html');
 }
 
 function displayConfiguration(url) {
     var path = utils.format('{0}?url={1}', 'configure.html', window.encodeURIComponent(url));
-    openUniqueTab(path, {
+    openExtensionView(path, {
         type: 'popup',
         width: preferences.get('config_width'),
         height: preferences.get('config_height')

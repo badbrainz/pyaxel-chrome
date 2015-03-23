@@ -82,11 +82,10 @@ function displayNotification(title, body) {
     chrome.tabs.query({
         lastFocusedWindow: true,
         active: true,
-        url: global.extension.source +
-            (preferences.get('display') ? 'downloads.html' : 'popup.html')
+        url: chrome.runtime.getURL(preferences.get('display') ? 'downloads.html' : 'popup.html')
     }, function(tabs) {
         if (!tabs.length) {
-            var icon = global.extension.source + 'graph/32.png';
+            var icon = chrome.runtime.getURL('graph/32.png');
             var wnd = window.webkitNotifications.createNotification(icon, title, body);
             var id = window.setTimeout(function() { wnd.cancel(); }, 7000);
             wnd.onclose = function() { window.clearTimeout(id); };
