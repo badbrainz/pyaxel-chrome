@@ -1,6 +1,5 @@
-ext.define('extension.socket', function() {
+ext.define('extension.sockets', function() {
 
-var messages = extension.messages;
 var utils = extension.utils;
 var preferences = extension.preferences;
 

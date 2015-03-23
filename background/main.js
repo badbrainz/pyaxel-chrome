@@ -172,10 +172,7 @@ function onRuntimeUpdated(v) {
 
 chrome.runtime.onInstalled.addListener(function(details) {
     onready.addListener(function() {
-        if (details.reason === 'install')
-            messages.send('install-runtime');
-        if (details.reason === 'update')
-            messages.send('update-runtime');
+        messages.send(details.reason + '-runtime');
     });
 });
 
@@ -226,9 +223,8 @@ window.exports = {
 
 utils.series([
     function(pass) {
-        extension.storage.local.get('settings/user', function(o) {
-            if ('settings/user' in o)
-                preferences.set(o['settings/user']);
+        extension.storage.local.get({'settings/user': preferences.get()}, function(o) {
+            preferences.set(o['settings/user']);
             pass();
         });
     },
@@ -240,18 +236,14 @@ utils.series([
         });
     }],
     function() {
-        extension.indicator.config.onclick = displayDownloads;
-        extension.filesystem.config.directory = 'scripts';
-
         chrome.runtime.onMessage.addListener(handleMessages);
         chrome.runtime.onMessageExternal.addListener(handleMessages);
         chrome.omnibox.onInputEntered.addListener(parseOmniboxInput);
         extension.indicator.bind();
         extension.storage.bind();
-        extension.filesystem.bind();
         extension.catalog.bind();
         extension.history.bind();
-        extension.task.bind();
+        extension.tasks.bind();
         messages.listen({
             'change-settings': handleSettingsChanged,
             'install-runtime': onRuntimeInstalled,
@@ -260,8 +252,10 @@ utils.series([
         
         extension.tasks.config.max = preferences.get('downloads');
         extension.tasks.config.verbose = preferences.get('verbose');
-
+        extension.indicator.config.onclick = displayDownloads;
+        
         updateContextMenus();
+        
         onready.fire();
     }
 );

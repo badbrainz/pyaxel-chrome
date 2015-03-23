@@ -10,25 +10,6 @@ var catalogs = {
     unassigned: {}
 };
 
-function onTaskCreated(task) {
-    delete catalogs.unassigned[task.id];
-}
-
-function onTaskStarted(task) {
-    catalogs.started[task.id] = catalogs.all[task.id];
-}
-
-function onTaskCompleted(task) {
-    catalogs.stopped[task.id] = catalogs.all[task.id];
-    delete catalogs.started[task.id];
-}
-
-function onTaskStopped(task) {
-    delete catalogs.unassigned[task.id];
-    delete catalogs.started[task.id];
-    catalogs.stopped[task.id] = catalogs.all[task.id];
-}
-
 function searchItem(key, id) {
     if (key in catalogs) {
         if (id == null)
@@ -48,6 +29,25 @@ function removeItem(id) {
 function addItem(item) {
     catalogs.all[item.id] = item;
     catalogs.unassigned[item.id] = item;
+}
+
+function onTaskCreated(task) {
+    delete catalogs.unassigned[task.id];
+}
+
+function onTaskStarted(task) {
+    catalogs.started[task.id] = catalogs.all[task.id];
+}
+
+function onTaskCompleted(task) {
+    catalogs.stopped[task.id] = catalogs.all[task.id];
+    delete catalogs.started[task.id];
+}
+
+function onTaskStopped(task) {
+    delete catalogs.unassigned[task.id];
+    delete catalogs.started[task.id];
+    catalogs.stopped[task.id] = catalogs.all[task.id];
 }
 
 return {

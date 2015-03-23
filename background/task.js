@@ -1,4 +1,4 @@
-ext.define('extension.task', function() {
+ext.define('extension.tasks', function() {
 
 var messages = extension.messages;
 var utils = extension.utils;
