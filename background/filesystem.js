@@ -87,21 +87,6 @@ function writeFile(path, data, callback) {
 }
 
 return {
-    bind: function() {
-        messages.listen({
-            'sync-data': function(data) {
-                var rx = /^(scripts|modules)\/.+$/;
-                for (var k in data) {
-                    if (!rx.test(k))
-                        continue;
-                    if (data[k] != null)
-                        writeFile(k, data[k]);
-                    else
-                        removeFile(k);
-                }
-            }
-        });
-    },
     read: readFile,
     write: writeFile,
     mkdir: makeDirectory,

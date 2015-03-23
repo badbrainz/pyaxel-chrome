@@ -69,14 +69,6 @@ function setPref(argA, argB) {
 }
 
 return {
-    bind: function() {
-        messages.listen({
-            'sync-data': function(data) {
-                if ('settings/user' in data)
-                    setPref(data['settings/user']);
-            }
-        });
-    },
     get: getPref,
     getCache: getCache,
     getChanges: getCache,

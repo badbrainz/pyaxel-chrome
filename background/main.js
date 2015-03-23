@@ -5,7 +5,6 @@ var utils = extension.utils;
 var preferences = extension.preferences;
 var script = extension.script;
 var manager = extension.manager;
-var sync = extension.sync;
 
 var onready = utils.event();
 
@@ -147,11 +146,6 @@ function handleMessages(request, sender, callback) {
     }
 }
 
-function handleRemoteSync(changes, area) {
-    if (area === 'sync')
-        sync.merge(changes);
-}
-
 function handleSettingsChanged(diff) {
     for (var k in diff.values) {
         switch (k) {
@@ -160,11 +154,6 @@ function handleSettingsChanged(diff) {
                 break;
         }
     }
-}
-
-function updateAccount() {
-    sync.pull(utils.merge(filters.get(), preferences.get()));
-    sync.push(utils.merge(filters.getChanges(), preferences.getChanges()));
 }
 
 function onRuntimeInstalled() {
@@ -237,27 +226,6 @@ utils.series([
                 preferences.set(o['settings/user']);
             pass();
         });
-    },
-    function(pass) {
-        extension.filesystem.ls('scripts/', function(a) {
-            var files = {};
-            function read(fn) {
-                return function(pass) {
-                    extension.filesystem.read('scripts/' + fn, 'UTF-8', function(d) {
-                        files[fn] = d;
-                        pass();
-                    });
-                }
-            }
-            var procs = [];
-            for (var i = 0; i < a.length; i++)
-                procs.push(read(a[i]));
-            utils.process(procs, function() {
-                extension.sync.pull(utils.merge(files, preferences.get()));
-                extension.sync.push(utils.merge(files, preferences.getChanges()));
-                pass();
-            });
-        });
     }],
     function() {
         extension.task.config.verbose = preferences.get('verbose');
@@ -265,16 +233,12 @@ utils.series([
         extension.indicator.config.onclick = displayDownloads;
         extension.filesystem.config.directory = 'scripts';
         extension.history.config.directory = 'history';
-    
-        //messages.send('sync-data', data);
-        chrome.storage.onChanged.addListener(handleRemoteSync);
+
         chrome.runtime.onMessage.addListener(handleMessages);
         chrome.runtime.onMessageExternal.addListener(handleMessages);
         chrome.omnibox.onInputEntered.addListener(parseOmniboxInput);
-        extension.preferences.bind();
         extension.indicator.bind();
         extension.storage.bind();
-        extension.sync.bind();
         extension.filesystem.bind();
         extension.catalog.bind();
         extension.history.bind();

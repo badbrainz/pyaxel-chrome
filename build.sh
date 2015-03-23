@@ -40,7 +40,6 @@ files_background=(ext/utils.js
                   background/preferences.js
                   background/indicator.js
                   background/storage.js
-                  background/sync.js
                   background/filesystem.js
                   background/script.js
                   background/catalog.js
