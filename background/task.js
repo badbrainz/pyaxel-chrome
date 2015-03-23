@@ -4,7 +4,6 @@ var messages = extension.messages;
 var utils = extension.utils;
 var manager = extension.manager;
 var sockets = extension.sockets;
-var preferences = extension.preferences;
 
 var tasks = {};
 
@@ -172,24 +171,13 @@ function onJobStopped(job) {
     sendCommand(job, 'abort');
 }
 
-function onSettingsChanged(diff) {
-    for (var k in diff.values) {
-        switch (k) {
-            case 'verbose':
-                config.verbose = diff.values[k];
-                break;
-        }
-    }
-}
-
 return {
     bind: function() {
         messages.listen({
             'job-available': onJobAvailable,
             'job-resumed': onJobResumed,
             'job-paused': onJobPaused,
-            'job-stopped': onJobStopped,
-            'change-settings': onSettingsChanged
+            'job-stopped': onJobStopped
         });
     },
     config: config

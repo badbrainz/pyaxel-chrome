@@ -5,6 +5,7 @@ var utils = extension.utils;
 var preferences = extension.preferences;
 var script = extension.script;
 var manager = extension.manager;
+var tasks = extension.tasks;
 
 var onready = utils.event();
 
@@ -153,6 +154,9 @@ function handleSettingsChanged(diff) {
             case 'contextmenu':
                 updateContextMenus();
                 break;
+            case 'verbose':
+                tasks.config.verbose = diff.values[k];
+                break;
         }
     }
 }
@@ -236,8 +240,6 @@ utils.series([
         });
     }],
     function() {
-        extension.task.config.verbose = preferences.get('verbose');
-        extension.task.config.max = preferences.get('downloads');
         extension.indicator.config.onclick = displayDownloads;
         extension.filesystem.config.directory = 'scripts';
 
