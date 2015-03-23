@@ -182,16 +182,6 @@ function onSettingsChanged(diff) {
     }
 }
 
-function initTasks(configs) {
-    var pref = preferences.get('notify');
-    preferences.set('notify', 0);
-    for (var i = 0; i < configs.length; i++) {
-        var job = manager.init(configs[i]);
-        broadcastStatus(job);
-    }
-    preferences.set('notify', pref);
-}
-
 return {
     bind: function() {
         messages.listen({
@@ -202,8 +192,7 @@ return {
             'change-settings': onSettingsChanged
         });
     },
-    config: config,
-    init: initTasks
+    config: config
 };
 
 });

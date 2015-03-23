@@ -227,13 +227,19 @@ utils.series([
                 preferences.set(o['settings/user']);
             pass();
         });
+    },
+    function(pass) {
+        extension.history.view(function(items) {
+            for (var i = 0; i < items.length; i++)
+                manager.init(items[i]);
+            pass();
+        });
     }],
     function() {
         extension.task.config.verbose = preferences.get('verbose');
         extension.task.config.max = preferences.get('downloads');
         extension.indicator.config.onclick = displayDownloads;
         extension.filesystem.config.directory = 'scripts';
-        extension.history.config.directory = 'history';
 
         chrome.runtime.onMessage.addListener(handleMessages);
         chrome.runtime.onMessageExternal.addListener(handleMessages);
@@ -252,7 +258,7 @@ utils.series([
         
         extension.tasks.config.max = preferences.get('downloads');
         extension.tasks.config.verbose = preferences.get('verbose');
-        extension.history.view(extension.task.init);
+
         updateContextMenus();
         onready.fire();
     }
