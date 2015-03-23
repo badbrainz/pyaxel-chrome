@@ -29,8 +29,9 @@ fi
 files_ext=(ext/ext.js
            ext/messages.js)
 
-files_src=(graph/
-           views/
+files_src=(`ls views`)
+files_src=(${files_src[@]/#/views/}
+           graph/
            scripts/
            ext/utils.js
            background/global.js)
