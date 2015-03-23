@@ -4,9 +4,7 @@ var messages = extension.messages;
 var utils = extension.utils;
 var storage = extension.storage;
 
-var config = Object.seal({
-    directory: ''
-});
+var directory = 'scripts/';
 
 function error() {
     if (chrome.runtime.lastError)
@@ -14,16 +12,16 @@ function error() {
 }
 
 function splitpath(path) {
-    var dir = path.split('/'), file = dir.pop();
+    var i = path.lastIndexOf('/') + 1;
     return {
-        dir: dir.join('/') || config.directory,
-        file: file
+        dir: path.substr(0, i) || directory,
+        file: path.substr(i)
     };
 }
 
 function fixpath(path) {
     var parts = splitpath(path);
-    return parts.dir + '/' + parts.file;
+    return parts.dir + parts.file;
 }
 
 function strippath(path) {
@@ -104,7 +102,6 @@ return {
             }
         });
     },
-    config: config,
     read: readFile,
     write: writeFile,
     mkdir: makeDirectory,
