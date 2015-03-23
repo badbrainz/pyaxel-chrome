@@ -9,6 +9,7 @@ var preferences = extension.preferences;
 var tasks = {};
 
 var config = Object.seal({
+    max: Infinity,
     verbose: false
 });
 
@@ -84,7 +85,7 @@ function broadcastStatus(job) {
 }
 
 function establishConnection() {
-    if (Object.keys(tasks).length >= (preferences.get('downloads') || Infinity))
+    if (Object.keys(tasks).length >= config.max)
         return;
 
     if (manager.jobsQueued()) {

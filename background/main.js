@@ -285,6 +285,8 @@ utils.series([
             'update-runtime': onRuntimeUpdated
         });
         
+        extension.tasks.config.max = preferences.get('downloads');
+        extension.tasks.config.verbose = preferences.get('verbose');
         extension.history.view(extension.task.init);
         updateContextMenus();
         onready.fire();
