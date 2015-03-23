@@ -9,42 +9,6 @@ var tasks = extension.tasks;
 
 var onready = utils.event();
 
-var contextmenus = [{
-    'documentUrlPatterns': ['*://*/*', 'chrome://downloads/*'],
-    'title': 'Save',
-    'id': 'save',
-    'contexts': ['link', 'selection'],
-    'onclick': function(info, tab) {
-        manager.addJob({ url: info.linkUrl || info.selectionText }, true);
-    }
-},{
-    'documentUrlPatterns': ['*://*/*', 'chrome://downloads/*'],
-    'title': 'Queue',
-    'id': 'queue',
-    'contexts': ['link', 'selection'],
-    'onclick': function(info, tab) {
-        manager.addJob({ url: info.linkUrl || info.selectionText }, false);
-    }
-},{
-    'documentUrlPatterns': ['*://*/*', 'chrome://downloads/*'],
-    'title': 'Configure',
-    'id': 'configure',
-    'contexts': ['link', 'selection'],
-    'onclick': function(info, tab) {
-        displayConfiguration(info.linkUrl || info.selectionText);
-    }
-},{
-    'documentUrlPatterns': ['*://*/*', 'chrome://downloads/*', 'chrome-extension://*/*'],
-    'title': 'Downloads',
-    'id': 'downloads',
-    'onclick': displayDownloads
-},{
-    'documentUrlPatterns': ['*://*/*', 'chrome://downloads/*', 'chrome-extension://*/*'],
-    'title': 'Preferences',
-    'id': 'preferences',
-    'onclick': displaySettings
-}];
-
 var scriptcommands = {
     'save': function(config) {
         manager.addJob(config, true);
@@ -117,13 +81,47 @@ function displayConfiguration(url) {
     });
 }
 
+function onContextMenu(info, tab) {
+    switch (info.menuItemId) {
+        case 'save':
+            manager.addJob({url: info.linkUrl || info.selectionText}, true);
+            break;
+        case 'queue':
+            manager.addJob({url: info.linkUrl || info.selectionText}, false);
+            break;
+        case 'configure':
+            displayConfiguration(info.linkUrl || info.selectionText);
+            break;
+        case 'downloads':
+            displayDownloads();
+            break;
+        case 'preferences':
+            displaySettings();
+            break;
+        case 'save':
+            break;
+    }
+    extension.exports[i.menuItemId](t);
+}
+
+function addContextmenuItem(x) {
+    chrome.contextMenus.create(utils.merge({
+        documentUrlPatterns: ['*://*/*', 'chrome://downloads/*'],
+        contexts: ['page', 'frame'],
+        onclick: onContextMenu
+    }, x));
+}
+
 function updateContextMenus() {
     chrome.contextMenus.removeAll(function() {
         if (preferences.get('contextmenu')) {
-            for (var i = 0; i < contextmenus.length; i++) {
-                delete contextmenus[i]['generatedId'];// WARN chrome adds this then throws WTF
-                chrome.contextMenus.create(contextmenus[i]);
-            }
+            addContextmenuItem({title: 'Save', id: 'save', contexts: ['link', 'selection']});
+            addContextmenuItem({title: 'Queue', id: 'queue', contexts: ['link', 'selection']});
+            addContextmenuItem({title: 'Configure', id: 'configure', contexts: ['link', 'selection']});
+            addContextmenuItem({title: 'Downloads', id: 'downloads',
+                documentUrlPatterns: ['*://*/*', 'chrome://downloads/*', 'chrome-extension://*/*']});
+            addContextmenuItem({title: 'Preferences', id: 'preferences',
+                documentUrlPatterns: ['*://*/*', 'chrome://downloads/*', 'chrome-extension://*/*']});
         }
     });
 }
