@@ -50,6 +50,10 @@ function grep(s, o) {
     return a ? t : filter(o, t);
 }
 
+function jsFileName(str) {
+    return str.replace(/\.js$/, '') + '.js';
+}
+
 function hostname(u, p) {
     var s = u.split('://');
     return (p ? s[0] + '://' : '') + rxhost.exec(s[1].split('/')[0])[1];
@@ -69,6 +73,7 @@ return {
     filter: filter,
     format: format,
     grep: grep,
+    jsname: jsFileName,
     hostname: hostname,
     origin: origin,
     regexp: regexp

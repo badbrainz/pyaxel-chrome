@@ -5,8 +5,6 @@ set -o pipefail
 set -o nounset
 #set -o xtrace
 
-clear
-
 revision=`hg parent --template '{node}'`
 
 dir_build="release"
@@ -29,15 +27,15 @@ fi
 files_ext=(ext/ext.js
            ext/messages.js)
 
-files_src=(`ls views`)
-files_src=(${files_src[@]/#/views/}
+files_src=(lib/*
+           views/*
            graph/
            scripts/
            ext/utils.js
-           background/global.js)
+           ext/string.js
+           background/defines.js)
 
-files_background=(ext/utils.js
-                  background/utils.js
+files_background=(background/utils.js
                   background/preferences.js
                   background/indicator.js
                   background/storage.js
@@ -60,44 +58,40 @@ isdirty() {
 }
 
 addrevision () {
-    echo
     echo "adding revision number"
     echo $1 > $2/REVISION
 }
 
 compilescripts() {
-    echo
-    echo "compiling $2: ${!1}"
+    echo "compiling $2:"
     if [ -e $2 ]; then
-        echo "file overwritten: $2"
+        echo "overwriting $2!"
     fi
     for i in ${!1}; do
+        echo -e "\t$i"
         cat $i >> $2
     done
 }
 
 linkresources() {
-    echo
-    echo "linking: "${!1}
+    echo "linking:"
     for i in ${!1}; do
+        echo -e "\t$i"
         ln -s $(readlink -f $i) $2
     done
 }
 
 writemanifest() {
-    echo
     echo "writing manifest"
     cp manifest.json $1
 }
 
 buildextension() {
-    echo
     echo "building extension"
     cp -rL $1 $2
 }
 
 packextension() {
-    echo
     echo "packing extension..."
     if [ "${bin_chromium}" ]; then
         "${bin_chromium}" ${flags_cr[@]} $1
@@ -110,21 +104,18 @@ packextension() {
 
 runextension() {
     if [ "${bin_chromium}" ]; then
-        echo
         echo "running extension..."
         "${bin_chromium}" ${flags_ct[@]} --load-extension="$1" --user-data-dir="$2"
     fi
 }
 
 initdir() {
-    echo
     echo "initializing $1/"
     mkdir -p $1
     rm -rf $1/*
 }
 
 cleanup() {
-    echo
     echo "removing $1/"
     rm -rf $1
 }

@@ -35,7 +35,7 @@ function compile(js, opts, args, callback) {
 
     function load_dependency(name) {
         return function(pass) {
-            filesystem.read(jsFileName('modules/' + name), 'UTF-8', function(src) {
+            filesystem.read(utils.jsname('modules/' + name), 'UTF-8', function(src) {
                 pass(name, src);
             });
         }
@@ -98,7 +98,7 @@ function compile(js, opts, args, callback) {
 function installScripts(items, dir) {
     var path = dir || '';
     utils.iterate(items, function(i, next) {
-        var name = jsFileName(i);
+        var name = utils.jsname(i);
         var req = new XMLHttpRequest();
         req.responseType = 'text';
         req.timeout = 10000;
@@ -123,7 +123,7 @@ function installModules(items) {
 }
 
 function makeScript(params, callback) {
-    filesystem.read(jsFileName(params.opts['script'] || 'default.js'), 'UTF-8',
+    filesystem.read(utils.jsname(params.opts['script'] || 'default.js'), 'UTF-8',
         function(data) {
             if (data != null)
                 compile(data, params.opts, params.args, callback);

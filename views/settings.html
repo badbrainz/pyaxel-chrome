@@ -4,9 +4,11 @@
         <meta charset="utf-8"/>
 		<link rel="stylesheet" type="text/css" href="chrome-bootstrap.css"/>
 		<link rel="stylesheet" type="text/css" href="options.css"/>
-        <script src="../global.js"></script>
-        <script src="utils.js"></script>
+        <script src="global.js"></script>
+        <script src="frame.js"></script>
+		<script src="ext.js"></script>
 		<script src="modals.js"></script>
+		<script src="defines.js"></script>
         <script src="dllib.js"></script>
         <script src="settings.js"></script>
         <style>
@@ -47,6 +49,14 @@
         }
         .chrome-bootstrap .overlay .page .vertical {
             -webkit-box-orient: vertical;
+        }
+		.chrome-bootstrap .overlay .page .status,
+		.chrome-bootstrap .overlay .page .address {
+            line-height: 2em;
+        }
+		.chrome-bootstrap .overlay .page .address {
+            color: grey;
+			font-family: monospace;
         }
         </style>
     </head>
@@ -107,7 +117,10 @@
         <template class="notify">
             <div class="page">
                 <h1></h1>
-                <div class="content-area"></div>
+                <div class="content-area">
+					<div class="status"></div>
+					<div class="address"></div>
+				</div>
                 <div class="action-area">
                     <div class="action-area-center">
                         <div class="button-strip">

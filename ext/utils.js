@@ -201,10 +201,12 @@ function scan(a, b) {
     return o;
 }
 
-function series(a, c) {
+function series(a, b, c) {
     var f = Array.prototype.slice.call(a);
-    var p = function() { f.length ? f.shift()(p) : c && c(); };
-    window.setTimeout(p, 0);
+    var p = function() { b(arguments[0]); !f.length && c && c(); };
+    window.setTimeout(function() {
+        while (f[0]) { f.shift()(p); }
+    }, 0);
 }
 
 function time() {

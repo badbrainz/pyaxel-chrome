@@ -247,13 +247,13 @@ utils.series([
             'install-runtime': onRuntimeInstalled,
             'update-runtime': onRuntimeUpdated
         });
-        
+
         extension.tasks.config.max = preferences.get('downloads');
         extension.tasks.config.verbose = preferences.get('verbose');
         extension.indicator.config.onclick = displayDownloads;
-        
+
         updateContextMenus();
-        
+
         onready.fire();
     }
 );

@@ -1,34 +1,36 @@
+ext.define('ext', function() {
+
+var dllib = extension.dllib;
+
 function onCheckboxEvent(e) {
-    gui.set(e.target.id);
+    dllib.gui.set(e.target.id);
     return true;
 }
 
 function resetUI() {
-    gui.get('host');
-    gui.get('port');
-    gui.get('delay');
-    gui.get('downloads');
-    gui.get('path');
-    gui.get('reconnect');
-    gui.get('splits');
-    gui.get('speed');
-    gui.get('contextmenu');
-    gui.get('display');
-    gui.get('filename');
-    gui.get('icon');
-    gui.get('notify');
-    gui.get('output');
-    gui.get('verbose');
+    dllib.gui.get('contextmenu');
+    dllib.gui.get('display');
+    dllib.gui.get('filename');
+    dllib.gui.get('icon');
+    dllib.gui.get('notify');
+    dllib.gui.get('output');
+    dllib.gui.get('verbose');
 }
 
 function initEvents() {
     relayEvent(document.body, 'click', 'input[type=checkbox]', onCheckboxEvent);
 }
 
-document.addEventListener('DOMContentLoaded', function onContentLoaded() {
-    chrome.runtime.getBackgroundPage(function(background) {
-        gui.settings = background.exports.getSettings();
-        initEvents();
-        resetUI();
-    });
-}, false);
+return {
+    initialize: function onContentLoaded() {
+        chrome.runtime.getBackgroundPage(function(background) {
+            dllib.gui.settings = background.exports.getSettings();
+            initEvents();
+            resetUI();
+        });
+    }
+};
+
+});
+
+document.addEventListener('DOMContentLoaded', ext.initialize);

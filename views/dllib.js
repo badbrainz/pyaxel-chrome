@@ -1,3 +1,5 @@
+ext.define('extension.dllib', function() {
+
 var status_strings = {};
 var panels = {};
 var bar = {};
@@ -369,3 +371,10 @@ function sum(l) {
     for (var i = 0, il = l.length; i < il; m += l[i++]);
     return m;
 }
+
+return {
+    gui: gui,
+    regex: regex
+};
+
+});

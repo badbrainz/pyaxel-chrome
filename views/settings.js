@@ -1,13 +1,18 @@
+ext.define('ext', function() {
+
+var modal = extension.modal;
+var dllib = extension.dllib;
+
 function getError(input) {
     var msg;
     switch (input.id) {
         case 'host':
-            if (!regex.ip.test(input.value.trim()))
+            if (!dllib.regex.ip.test(input.value.trim()))
                 msg = 'Invalid IP address';
             break;
         case 'path':
             var value = input.value.trim();
-            if (value && !regex.path.test(value))
+            if (value && !dllib.regex.path.test(value))
                 msg = 'Invalid path';
             break;
         case 'port':
@@ -35,14 +40,14 @@ function onTestServerEvent(e) {
         modal.show('notify',
             'Server status', 'Connecting...',
             function(overlay) {
-                var address = 'ws://' + gui.get('host') + ':' + gui.get('port');
+                var address = 'ws://' + dllib.gui.get('host') + ':' + dllib.gui.get('port');
                 ws = new window.WebSocket(address);
                 ws.onopen = function(event) {
                     ws.send(JSON.stringify({'cmd': ServerCommand.QUIT}));
-                    overlay.end('Connected to ' + address);
+                    overlay.end('Connected:', address);
                 };
                 ws.onerror = function(event) {
-                    overlay.end('Could not connect to ' + address);
+                    overlay.end('No connection:', address);
                 };
             },
             function() {
@@ -60,7 +65,7 @@ function onTestServerEvent(e) {
 function onInputKeyEvent(e) {
     switch (e.keyIdentifier) {
         case 'U+001B':
-            gui.get(e.target.id);
+            dllib.gui.get(e.target.id);
             e.preventDefault();
             break;
         case 'Enter':
@@ -73,22 +78,22 @@ function onInputBlurEvent(e) {
     var error = getError(e.target);
     if (error) {
         modal.show('info', 'Error', error);
-        gui.get(e.target.id);
+        dllib.gui.get(e.target.id);
         return;
     }
     //e.target.value = +e.target.value.trim();// TODO fix '01' values
-    gui.set(e.target.id);
+    dllib.gui.set(e.target.id);
 }
 
 function resetUI() {
-    gui.get('host');
-    gui.get('port');
-    gui.get('delay');
-    gui.get('downloads');
-    gui.get('path');
-    gui.get('reconnect');
-    gui.get('splits');
-    gui.get('speed');
+    dllib.gui.get('host');
+    dllib.gui.get('port');
+    dllib.gui.get('delay');
+    dllib.gui.get('downloads');
+    dllib.gui.get('path');
+    dllib.gui.get('reconnect');
+    dllib.gui.get('splits');
+    dllib.gui.get('speed');
 }
 
 function initEvents() {
@@ -97,19 +102,26 @@ function initEvents() {
     $('test').addEventListener('click', onTestServerEvent, false);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    chrome.runtime.getBackgroundPage(function(background) {
-        gui.settings = background.exports.getSettings();
-        initEvents();
-        resetUI();
-    });
-     if (!window.localStorage.firstRun) {
-        window.localStorage.firstRun = 1;
-        var css = document.createElement('link');
-        css.rel = 'stylesheet';
-        css.type = 'text/css';
-        css.href = 'firstrun.css';
-        document.head.appendChild(css);
-        modal.show('intro');
-     }
-}, false);
+return {
+    initialize: function() {
+        chrome.runtime.getBackgroundPage(function(background) {
+            dllib.gui.settings = background.exports.getSettings();
+            initEvents();
+            resetUI();
+        });
+
+        if (!window.localStorage.firstRun) {
+            window.localStorage.firstRun = 1;
+            var css = document.createElement('link');
+            css.rel = 'stylesheet';
+            css.type = 'text/css';
+            css.href = 'firstrun.css';
+            document.head.appendChild(css);
+            modal.show('intro');
+        }
+    }
+};
+
+});
+
+document.addEventListener('DOMContentLoaded', ext.initialize);

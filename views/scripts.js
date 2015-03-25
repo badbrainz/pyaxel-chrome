@@ -1,5 +1,9 @@
-var filesystem = null;
+ext.define('ext', function() {
 
+var utils = extension.utils;
+var modal = extension.modal;
+
+var filesystem = null;
 var scripts_interface = {
     id: '',
     directory: '',
@@ -10,7 +14,7 @@ var scripts_interface = {
         this.directory = directory;
         if (default_script)
             this.default_script = default_script;
-        this.cm = CodeMirror(document.querySelector('#' + this.id + ' .source-code'), {
+        this.cm = CodeMirror($q('#' + this.id + ' .source-code'), {
             indentUnit: 4,
             autoCloseBrackets: true,
             matchBrackets: true,
@@ -28,7 +32,7 @@ var scripts_interface = {
             _this.sort();
             _this.load();
             _this.cm.on('change', function(cm, x) {
-                var li = document.querySelector('#' + _this.id + 'scripts .scriptname.selected');
+                var li = $q('#' + _this.id + 'scripts .scriptname.selected');
                 if (li)
                     li.classList.toggle('dirty', _this.isDirty());
             });
@@ -45,7 +49,7 @@ var scripts_interface = {
                 _this.cm.clearHistory();
                 _this.dirty = _this.cm.changeGeneration();
                 _this.current = file_name;
-                var li = document.querySelector('#' + _this.id + 'scripts .scriptname.selected');
+                var li = $q('#' + _this.id + 'scripts .scriptname.selected');
                 if (li)
                     li.classList.remove('dirty');
                 var elms = _this.query('');
@@ -67,7 +71,7 @@ var scripts_interface = {
             var _this = this;
             filesystem.write(this.directory + this.current, this.value(), function() {
                 _this.dirty = _this.cm.changeGeneration();
-                var li = document.querySelector('#' + _this.id + 'scripts .scriptname.selected');
+                var li = $q('#' + _this.id + 'scripts .scriptname.selected');
                 if (li)
                     li.classList.remove('dirty');
             });
@@ -96,7 +100,7 @@ var scripts_interface = {
             if (file_name === this.default_script)
                 return;
             var _this = this;
-            filesystem.remove(this.directory + file_name, nop);
+            filesystem.remove(this.directory + file_name);
             var index = _this.indexOf(file_name) + 1;
             var elm = _this.query(':nth-child(' + index + ')');
             if (elm) {
@@ -115,10 +119,10 @@ var scripts_interface = {
         var _this = this;
         var tasks = [];
         for (var i = 0; i < blobs.length; i++)
-            tasks.push(blob_writer(this.directory, jsFileName(blobs[i].name), blobs[i]));
-        process(tasks, this.add.bind(this), function() {
+            tasks.push(blob_writer(this.directory, utils.jsname(blobs[i].name), blobs[i]));
+        utils.series(tasks, this.add.bind(this), function() {
             _this.sort();
-            _this.load(document.querySelector('#' + _this.id + 'scripts .scriptname.selected dd').innerText);
+            _this.load($q('#' + _this.id + 'scripts .scriptname.selected dd').innerText);
         });
     },
     indexOf: function(file_name) {
@@ -129,7 +133,7 @@ var scripts_interface = {
         var query = '#' + this.id + 'scripts .scriptname';
         if (!selector)
             return document.querySelectorAll(query);
-        return document.querySelector(query + selector);
+        return $q(query + selector);
     },
     list: function() {
         var results = [];
@@ -139,7 +143,7 @@ var scripts_interface = {
         return results;
     },
     sort: function() {
-        var sel = document.querySelector('#' + this.id + 'scripts .scriptname.selected dd');
+        var sel = $q('#' + this.id + 'scripts .scriptname.selected dd');
         var elms = this.query('');
         var names = Array.prototype.map.call(elms, function(i) {
             return i.querySelector('dd').innerText;
@@ -173,17 +177,15 @@ var scripts_interface = {
         return this.cm.getValue();
     }
 };
-
 var scripts = {
     contentscripts: Object.create(scripts_interface),
     modulescripts: Object.create(scripts_interface)
 };
-
 var ui = {
     newScript: function(scr) {
         modal.show('input', function(input) {
             if (/^[\w\s_]+$/.test(input)) {
-                var file_name = jsFileName(input.replace(/\s/g, '_'));
+                var file_name = utils.jsname(input.replace(/\s/g, '_'));
                 if (scr.indexOf(file_name) == -1) {
                     if (scr === scripts.modulescripts)
                         scr.new(file_name, '{\n    \n}', {line: 1, ch: 4});
@@ -195,23 +197,20 @@ var ui = {
                 modal.show('info', 'Error', 'Bad file name');
         });
     },
-
     removeScripts: function(scr) {
         var list = scr.list();
         for (var i = 0; i < list.length; i++)
             scr.remove(list[i]);
         scr.load();
     },
-
     saveScript: function(scr) {
         scr.save(function(file_name) {
             // TODO stop using this
 //             modal.show('info', "Saved " + (scr === scripts.modulescripts ? "module" : "script"), file_name);
         });
     },
-
     importScripts: function(scr) {
-        var elm = document.querySelector('input[type=file]');
+        var elm = $q('input[type=file]');
         elm.addEventListener('change', function onImport(e) {
             elm.removeEventListener('change', onImport, false);
             scr.import(e.target.files);
@@ -233,7 +232,7 @@ function blob_writer(dir, name, blob) {
 }
 
 function createTemplateElement() {
-    var elm = template('script-name').cloneNode(true).querySelector('.scriptname');
+    var elm = $x('script-name').querySelector('.scriptname');
     return {
         set title(str) {
             elm.querySelector('dt').innerText = str;
@@ -270,7 +269,7 @@ function onScriptControlEvent(e) {
 }
 
 function onFullscreen(scr) {
-    var root = document.querySelector('#' + scr.id);
+    var root = $q('#' + scr.id);
     if (scr.container == null)
         scr.container = root.parentNode;
     var where = root.classList.contains('fullscreen') ? scr.container : document.body;
@@ -285,22 +284,28 @@ function initEvents() {
     relayEvent('#content, #module', 'click', 'button', onScriptControlEvent);
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-    chrome.runtime.getPlatformInfo(function(info) {
-        document.body.classList.add('platform-' + info.os);
-    });
-    chrome.runtime.getBackgroundPage(function(bg) {
-        filesystem = bg.exports.getFilesystem();
-        initEvents();
-        scripts.contentscripts.init('content', '', 'default.js');
-        scripts.modulescripts.init('module', 'modules/');
-    });
-}, false);
-
-
-window.addEventListener('message', function(e) {
+function onMessage(e) {
     if (e.data.event == 'navigation')
         showPage(e.data.id);
     else if (e.data.event == 'navigationLoaded')
         postChildMessage('submenu', {event: 'changeSelection', id: 'content'});
+}
+
+return {
+    initialize: function() {
+        window.addEventListener('message', onMessage);
+        chrome.runtime.getPlatformInfo(function(info) {
+            document.body.classList.add('platform-' + info.os);
+        });
+        chrome.runtime.getBackgroundPage(function(background) {
+            filesystem = background.exports.getFilesystem();
+            initEvents();
+            scripts.contentscripts.init('content', '', 'default.js');
+            scripts.modulescripts.init('module', 'modules/');
+        });
+    }
+};
+
 });
+
+document.addEventListener('DOMContentLoaded', ext.initialize);
