@@ -41,10 +41,6 @@ var WebSocketStatus = {
     APPLICATION: 4999
 };
 
-function jsFileName(str) {
-    return str.replace(/\.js$/, '') + '.js';
-}
-
 function prioritySort(nodeList, parent) {
     var sorted = Array.prototype.slice.call(nodeList);
     sorted = sorted.filter(function(elm) {
