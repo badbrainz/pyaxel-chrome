@@ -3,7 +3,7 @@ ext.define('extension.messages', function() {
 var components = [];
 var runtime = {
     send: function(message, fn) {
-        chrome.runtime.sendMessage(message, fn);
+        chrome.runtime.sendMessage(chrome.runtime.id, message, fn);
     }
 };
 
