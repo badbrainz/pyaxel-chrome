@@ -184,6 +184,7 @@ function process(a, c) {
     var f = Array.prototype.slice.call(a), l = f.length;
     var p = function() { --l === 0 && c && c(); };
     window.setTimeout(function() {
+        !l && c && c();
         while (f[0]) { f.shift()(p); }
     }, 0);
 }
@@ -205,6 +206,7 @@ function series(a, b, c) {
     var f = Array.prototype.slice.call(a);
     var p = function() { b(arguments[0]); !f.length && c && c(); };
     window.setTimeout(function() {
+        !l && c && c();
         while (f[0]) { f.shift()(p); }
     }, 0);
 }
