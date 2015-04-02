@@ -106,7 +106,7 @@ function onContextMenu(info, tab) {
 
 function addContextmenuItem(x) {
     chrome.contextMenus.create(utils.merge({
-        documentUrlPatterns: ['*://*/*', 'chrome://downloads/*'],
+        documentUrlPatterns: ['*://*/*', 'chrome://*/*', 'chrome-extension://*/*'],
         contexts: ['page', 'frame'],
         onclick: onContextMenu
     }, x));
@@ -118,10 +118,8 @@ function updateContextMenus() {
             addContextmenuItem({title: 'Save', id: 'save', contexts: ['link', 'selection']});
             addContextmenuItem({title: 'Queue', id: 'queue', contexts: ['link', 'selection']});
             addContextmenuItem({title: 'Configure', id: 'configure', contexts: ['link', 'selection']});
-            addContextmenuItem({title: 'Downloads', id: 'downloads',
-                documentUrlPatterns: ['*://*/*', 'chrome://downloads/*', 'chrome-extension://*/*']});
-            addContextmenuItem({title: 'Preferences', id: 'preferences',
-                documentUrlPatterns: ['*://*/*', 'chrome://downloads/*', 'chrome-extension://*/*']});
+            addContextmenuItem({title: 'Downloads', id: 'downloads'});
+            addContextmenuItem({title: 'Preferences', id: 'preferences'});
         }
     });
 }
