@@ -1,7 +1,7 @@
 /* usage: [command] [opts] [args]
-     pyaxelws music
-     pyaxelws music -q /podcast/live_2014_*
-     pyaxelws -e mp3 -p /podcast/live_2014_*
+     pyaxel music
+     pyaxel music -q /podcast/live_2014_*
+     pyaxel -e mp3 -p /podcast/live_2014_*
    commands: audio, video, archive, document, software, music, movie
    opts: -e (--extension), -p (--pattern), -q (--queue)
 */

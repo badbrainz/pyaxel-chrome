@@ -3,6 +3,7 @@ ext.define('extension.script', function() {
 var utils = extension.utils;
 var filesystem = extension.filesystem;
 
+var directory = 'userscripts/';
 var schema = [
     ['s', 'script', ':', 'javascript file'],
     ['p', 'pattern', ':', 'url pattern'],
@@ -95,8 +96,8 @@ function compile(js, opts, args, callback) {
     compile_dependencies(getDependencies(js), build);
 }
 
-function installScripts(items, dir) {
-    var path = dir || '';
+function installScripts(dir, items, callback) {
+    var path = dir || 'scripts/';
     utils.iterate(items, function(i, next) {
         var name = utils.jsname(i);
         var req = new XMLHttpRequest();
@@ -111,14 +112,8 @@ function installScripts(items, dir) {
             }
         };
         req.onerror = req.ontimeout = next;
-        req.open('GET', 'scripts/' + name, true);
+        req.open('GET', directory + name, true);
         req.send();
-    });
-}
-
-function installModules(items) {
-    filesystem.mkdir('modules', function() {
-        installScripts(items, 'modules/');
     });
 }
 
@@ -184,7 +179,6 @@ function parseScript(input) {
 
 return {
     install: installScripts,
-    installModules: installModules,
     make: makeScript,
     parse: parseScript
 };

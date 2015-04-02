@@ -10,5 +10,9 @@
     search: function(msg, callback)
     {
         chrome.extension.sendMessage({cmd:'search', data:msg}, callback)
+    },
+    configure: function(msg)
+    {
+        chrome.extension.sendMessage({cmd:'configure', data:msg})
     }
 }

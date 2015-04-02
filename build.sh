@@ -30,7 +30,7 @@ files_ext=(ext/ext.js
 files_src=(lib/*
            views/*
            graph/
-           scripts/
+           userscripts/
            ext/utils.js
            ext/string.js
            background/defines.js)

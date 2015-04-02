@@ -158,8 +158,8 @@ function handleSettingsChanged(diff) {
 }
 
 function onRuntimeInstalled() {
-    script.install(['default']);
-    script.installModules(['deprecated', 'dllib', 'strlib']);
+    script.install('scripts/', ['default']);
+    script.install('modules/', ['deprecated', 'dllib', 'strlib']);
     displaySettings();
 }
 
