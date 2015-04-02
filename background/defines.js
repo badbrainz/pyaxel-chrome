@@ -1,4 +1,4 @@
-/* pyaxelws transfer codes */
+/* pyaxel transfer codes */
 var JobStatus = {
     QUEUED: 0,
     BAD_REQUEST: 100,
@@ -15,7 +15,7 @@ var JobStatus = {
     CONNECTING: 210
 };
 
-/* pyaxelws server commands */
+/* pyaxel server commands */
 var ServerCommand = {
     START: 0,
     STOP: 1,

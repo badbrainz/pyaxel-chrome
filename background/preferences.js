@@ -7,8 +7,8 @@ var settings = Object.create(null);
 var defaults = Object.freeze({
     'popup_width': 500,
     'popup_height': 400,
-    'config_width': 530,
-    'config_height': 290,
+    'config_width': 600,
+    'config_height': 300,
     'contextmenu': 1,
     'delay': 20,
     'display': 1,

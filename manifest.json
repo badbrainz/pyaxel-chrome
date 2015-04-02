@@ -1,8 +1,8 @@
 {
-    "name":"PyaxelWS",
+    "name":"crPyaxel",
     "version":"2.0.2",
     "manifest_version":2,
-    "description":"Download Accelerator in Python 2.x.",
+    "description":"Chrome interface to Pyaxel, a download accelerator in Python",
     
     "icons":{
         "128":"graph/128.png",
@@ -27,10 +27,10 @@
             "19":"graph/19.png",
             "38":"graph/32.png"
         },
-        "default_title":"PyaxelWS"
+        "default_title":"crPyaxel"
     },
     "omnibox":{
-        "keyword":"pyaxelws"
+        "keyword":"pyaxel"
     },
     
     "minimum_chrome_version":"26",
@@ -38,8 +38,8 @@
     "permissions":[
         "contextMenus",
         "notifications",
-        "activeTab",
-        "storage"
+        "storage",
+        "activeTab"
     ],
     
     "web_accessible_resources":[

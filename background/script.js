@@ -37,7 +37,7 @@ function compile(js, opts, args, callback) {
     function load_dependency(name) {
         return function(pass) {
             filesystem.read(utils.jsname('modules/' + name), 'UTF-8', function(src) {
-                pass(name, src);
+                pass({name: name, src: src});
             });
         }
     }
@@ -45,14 +45,14 @@ function compile(js, opts, args, callback) {
     function compile_dependencies(names, callback) {
         var mdeps = [];
 
-        function pass(name, src) {
-            if (name in compiled)
+        function pass(info) {
+            if (info.name in compiled)
                 return;
 
-            console.assert(src != null, 'compile error: unknown module:', name);
-            compiled[name] = src;
+            console.assert(info.src != null, 'compile error: unknown module:', info.name);
+            compiled[info.name] = info.src;
 
-            mdeps = getDependencies(src).concat(mdeps);
+            mdeps = getDependencies(info.src).concat(mdeps);
         }
 
         function join() {
@@ -69,7 +69,7 @@ function compile(js, opts, args, callback) {
                 callback(compiled);
         }
 
-        utils.process(names.map(load_dependency), pass, join);
+        utils.series(names.map(load_dependency), pass, join);
     }
 
     function build(obj) {
@@ -98,7 +98,7 @@ function compile(js, opts, args, callback) {
 
 function installScripts(dir, items, callback) {
     var path = dir || 'scripts/';
-    utils.iterate(items, function(i, next) {
+    utils.iterate(items, function(i, pass) {
         var name = utils.jsname(i);
         var req = new XMLHttpRequest();
         req.responseType = 'text';
@@ -106,15 +106,15 @@ function installScripts(dir, items, callback) {
         req.onload = function() {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200)
-                    filesystem.write(path + name, req.response, next);
+                    filesystem.write(path + name, req.response, pass);
                 else
-                    next();
+                    pass();
             }
         };
-        req.onerror = req.ontimeout = next;
+        req.onerror = req.ontimeout = pass;
         req.open('GET', directory + name, true);
         req.send();
-    });
+    }, callback);
 }
 
 function makeScript(params, callback) {

@@ -6,23 +6,19 @@ var preferences = extension.preferences;
 var script = extension.script;
 var manager = extension.manager;
 var tasks = extension.tasks;
-
 var onready = utils.event();
 
-var scriptcommands = {
-    'save': function(config) {
+var script_commands = {
+    save: function(config) {
         manager.addJob(config, true);
     },
-
-    'queue': function(config) {
+    queue: function(config) {
         manager.addJob(config, false);
     },
-
-    'configure': function(config) {
+    configure: function(config) {
         displayConfiguration(config.url);
     },
-
-    'search': function(id) {
+    search: function(id) {
         switch (typeof id) {
             case 'number':
             case 'string':
@@ -101,7 +97,6 @@ function onContextMenu(info, tab) {
         case 'save':
             break;
     }
-    extension.exports[i.menuItemId](t);
 }
 
 function addContextmenuItem(x) {
@@ -137,8 +132,8 @@ function parseOmniboxInput(input, disposition) {
 }
 
 function handleMessages(request, sender, callback) {
-    if (request.cmd in scriptcommands) {
-        var result = scriptcommands[request.cmd](request.data);
+    if (request.cmd in script_commands) {
+        var result = script_commands[request.cmd](request.data);
         if (result != null)
             callback(result);
     }
@@ -173,48 +168,38 @@ chrome.runtime.onInstalled.addListener(function(details) {
 });
 
 window.exports = {
-    'addDownload': function(config, ready) {
+    addDownload: function(config, ready) {
         manager.addJob(config, ready);
     },
-
-    'retryDownload': function(id) {
+    retryDownload: function(id) {
         manager.retryJob(id);
     },
-
-    'cancelDownload': function(id) {
+    cancelDownload: function(id) {
         manager.stopJob(id);
     },
-
-    'removeDownload': function(id) {
+    removeDownload: function(id) {
         manager.removeJob(id);
     },
-
-    'pauseDownload': function(id) {
+    pauseDownload: function(id) {
         manager.pauseJob(id);
     },
-
-    'resumeDownload': function(id) {
+    resumeDownload: function(id) {
         manager.resumeJob(id);
     },
-
-    'clearDownloads': function() {
+    clearDownloads: function() {
         manager.purgeJobs();
     },
-
-    'getSettings': function() {
+    getSettings: function() {
         return utils.adapter(preferences, '');
     },
-
-    'getFilesystem': function() {
+    getFilesystem: function() {
         return extension.filesystem;
     },
-
-    'getDownloads': function() {
+    getDownloads: function() {
         return manager.searchJobs('all');
     },
-
-    'displaySettings': displaySettings,
-    'displayConfiguration': displayConfiguration
+    displaySettings: displaySettings,
+    displayConfiguration: displayConfiguration
 };
 
 utils.series([

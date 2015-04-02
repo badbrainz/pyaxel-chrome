@@ -203,8 +203,8 @@ function scan(a, b) {
 }
 
 function series(a, b, c) {
-    var f = Array.prototype.slice.call(a);
-    var p = function() { b(arguments[0]); !f.length && c && c(); };
+    var f = Array.prototype.slice.call(a), l = f.length;
+    var p = function() { c && b(arguments[0]); --l === 0 && (c || b)() };
     window.setTimeout(function() {
         !l && c && c();
         while (f[0]) { f.shift()(p); }
