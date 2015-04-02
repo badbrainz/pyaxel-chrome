@@ -1,63 +1,33 @@
-var extensions = null;
+ext.define('ext', function() {
 
-gui.remove = function(root, download) {
-    if (!root.parentNode)
-        return;
-    if (getPanel(download).state !== getJobState(download))
-        root.parentNode.removeChild(root);
-};
-
-gui.insert = function(root, download) {
-    if (getPanel(download).state !== getJobState(download))
-        $(getJobState(download)).insertAdjacentElement('afterEnd', root);
-};
-
-panel_interface.update = function(download) {
-    this.status = download.status;
-    this.state = getJobState(download);
-};
-
-panel_interface.commands = {
-    'cancel': function(panel) {
-        extension.cancelDownload(panel.id);
-    },
-
-    'retry': function(panel) {
-        extension.retryDownload(panel.id);
-        removePanel(panel);
-    },
-
-    'pause': function(panel) {
-        extension.pauseDownload(panel.id);
-    },
-
-    'resume': function(panel) {
-        extension.resumeDownload(panel.id);
-    },
-
-    'remove': function(panel) {
-        extension.removeDownload(panel.id);
-        removePanel(panel);
-    }
-};
+var dllib = extension.dllib;
+var exports;
 
 function processInputbox(cmd) {
     var input = $('uri');
     if (!input.value.trim())
         return;
-    extension.addDownload({ url: input.value.trim() }, true);
+    exports.addDownload({ url: input.value.trim() }, true);
     input.value = '';
 }
 
 function clearDisplay() {
     $('display').classList.add('collapsed');
-    downloads.clear();
+    dllib.downloads.clear();
     $('display').classList.remove('collapsed');
 }
 
+function updateDisplay() {
+    var l = exports.getDownloads();
+    for (var i = 0; i < l.length; i++)
+        dllib.downloads.update(l[i]);
+}
+
+
 function onKeyup(e) {
     if (e.target.id == 'uri') {
-        if (e.keyCode == 13) processInputbox('save');
+        if (e.keyCode == 13)
+            processInputbox('save');
     }
 }
 
@@ -65,7 +35,7 @@ function onClick(e) {
     switch (e.target.id) {
         case 'configure':
             if ($('uri').value.trim()) {
-                extension.displayConfiguration($('uri').value.trim());
+                exports.displayConfiguration($('uri').value.trim());
                 $('uri').value = '';
             }
             break;
@@ -73,35 +43,65 @@ function onClick(e) {
             processInputbox('save');
             break;
         case 'settings':
-            extension.displaySettings();
+            exports.displaySettings();
             break;
         case 'clear':
             clearDisplay();
-            extension.clearDownloads();
-            update();
+            exports.clearDownloads();
+            updateDisplay();
             break;
     }
 }
 
-function update() {
-    var l = extension.getDownloads();
-    for (var i = 0; i < l.length; i++)
-        downloads.update(l[i]);
-}
+dllib.gui.remove = function(root, download) {
+    if (!root.parentNode)
+        return;
+    if (dllib.getPanel(download).state !== dllib.getJobState(download))
+        root.parentNode.removeChild(root);
+};
 
-document.addEventListener('DOMContentLoaded', function() {
-    chrome.runtime.getBackgroundPage(function(bg) {
-        extension = bg.exports;
-        gui.settings = extension.getSettings();
-        gui.conf.shortname = gui.settings.get('filename');
-        if (gui.settings.get('output') == 0) {
-            downloads.renderer = createRenderer;
-            $('display').classList.add('simple');
-        }
-        $('inputbox').addEventListener('keyup', onKeyup);
-        $('inputbox').addEventListener('click', onClick);
-        $('toolbar').addEventListener('click', onClick);
-        window.setInterval(update, 1000);
-        update();
-    });
-}, false);
+dllib.gui.insert = function(root, download) {
+    if (dllib.getPanel(download).state !== dllib.getJobState(download))
+        $(dllib.getJobState(download)).insertAdjacentElement('afterEnd', root);
+};
+
+dllib.Panel.commands = {
+    cancel: function(panel) {
+        exports.cancelDownload(panel.id);
+    },
+    retry: function(panel) {
+        exports.retryDownload(panel.id);
+        dllib.removePanel(panel);
+    },
+    pause: function(panel) {
+        exports.pauseDownload(panel.id);
+    },
+    resume: function(panel) {
+        exports.resumeDownload(panel.id);
+    },
+    remove: function(panel) {
+        exports.removeDownload(panel.id);
+        dllib.removePanel(panel);
+    }
+};
+
+return {
+    initialize: function() {
+        chrome.runtime.getBackgroundPage(function(background) {
+            exports = background.exports;
+            dllib.gui.settings = exports.getSettings();
+            dllib.gui.conf.shortname = dllib.gui.settings.get('filename');
+            if (dllib.gui.settings.get('output') == 0)
+                $('display').classList.add('simple');
+            $('inputbox').addEventListener('keyup', onKeyup);
+            $('inputbox').addEventListener('click', onClick);
+            $('toolbar').addEventListener('click', onClick);
+            window.setInterval(updateDisplay, 1000);
+            updateDisplay();
+        });
+    }
+};
+
+});
+
+document.addEventListener('DOMContentLoaded', ext.initialize);

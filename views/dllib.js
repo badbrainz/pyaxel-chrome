@@ -1,10 +1,30 @@
+ext.define('extension.utils', function() {
+
+var rxpath = /^(?:(?:\/|\/(?:[^\/]+\/)+)|(?:[a-zA-Z]:\\|[a-zA-Z]:\\(?:[^\\]+\\)+))$/;
+var rxip = /^(([01]?\d\d?|2[0-4]\d|25[0-5])\.){3}([01]?\d\d?|25[0-5]|2[0-4]\d)$/;
+
+function formatBytes(b) {
+    if (!b) return '';
+    var c = ['bytes', 'kb', 'MB', 'GB', 'TB', 'PB'];
+    var d = Math.floor(Math.log(b) / Math.log(1024));
+    return (b / Math.pow(1024, Math.floor(d))).toFixed(2) + c[d];
+}
+
+return {
+    formatBytes: formatBytes,
+    path: rxpath,
+    ip: rxip
+};
+
+});
+
 ext.define('extension.dllib', function() {
 
+var utils = extension.utils;
 var status_strings = {};
 var panels = {};
 var bar = {};
 var pie = {};
-var exports = null;
 
 bar.width = 600;
 bar.height = 8;
@@ -30,11 +50,6 @@ status_strings[JobStatus.PROCESSING] = 'In progress';
 status_strings[JobStatus.RESERVED] = 'Verifying checksum';
 status_strings[JobStatus.STOPPED] = 'Paused';
 status_strings[JobStatus.VERIFIED] = 'Completed';
-
-var regex = {
-    path: /^(?:(?:\/|\/(?:[^\/]+\/)+)|(?:[a-zA-Z]:\\|[a-zA-Z]:\\(?:[^\\]+\\)+))$/,
-    ip: /^(([01]?\d\d?|2[0-4]\d|25[0-5])\.){3}([01]?\d\d?|25[0-5]|2[0-4]\d)$/
-};
 
 var downloads = Object.create({
     renderer: createRenderer,
@@ -77,17 +92,20 @@ var gui = {
     remove: removeRoot
 };
 
-var panel_interface = {
+var Panel = {
     status: -1,
     commands: {},
-    draw: function(download) {},
     handleEvent: function(e) {
         if (e.target.className in this.commands)
             this.commands[e.target.className](this);
     },
     update: function(download) {
         this.status = download.status;
-    }
+        this.state = getJobState(download);
+        this.onupdate();
+    },
+    draw: function(download) {},
+    onupdate: function() {}
 };
 
 function getStatusString(download) {
@@ -172,7 +190,7 @@ function createMeasurementLabel(var_args) {
 function createPie(id) {
     var node = createElement('div', 'pie');
     node.appendChild(createElement('div', 'background'));
-    node.appendChild(createElement('div', 'foreground')).style.webkitMask = print('-webkit-canvas(disc_{0})', id);
+    node.appendChild(createElement('div', 'foreground')).style.webkitMask = utils.format('-webkit-canvas(disc_{0})', id);
     return node;
 }
 
@@ -240,7 +258,7 @@ function updateRoot(panel, download) {
     root.classList.add(getTaskState(download));
     root.querySelector('.status').innerText = getStatusString(download);
     root.querySelector('.name').innerText = (gui.conf.shortname ? download.name : download.path) || '';
-    root.querySelector('.size').innerText = formatBytes(download.size);
+    root.querySelector('.size').innerText = utils.formatBytes(download.size);
     root.querySelector('.date').innerText = download.date;
     gui.insert(root, download);
 }
@@ -285,7 +303,7 @@ function drawBar(canvas, progress, size) {
 }
 
 function createPanel(download) {
-    return Object.create(panel_interface, {
+    return Object.create(Panel, {
         'id': {
             value: download.id,
             configurable: false,
@@ -349,32 +367,57 @@ function createRenderer(download) {
         return createProgressRenderer(gui.search(download));
 }
 
-function formatBytes(b) {
-    if (!b) return '';
-    var c = ['bytes', 'kb', 'MB', 'GB', 'TB', 'PB'];
-    var d = Math.floor(Math.log(b) / Math.log(1024));
-    return (b / Math.pow(1024, Math.floor(d))).toFixed(2) + c[d];
-}
-
-function process(a, b, c) {
-    var f = Array.prototype.slice.call(a);
-    var l = f.length;
-    function p() { b.apply(b, arguments); --l == 0 && c && c(); }
-    window.setTimeout(function() {
-        l == 0 && c && c();
-        while (f[0]) { f.shift()(p); }
-    }, 0);
-}
-
 function sum(l) {
     var m = 0;
     for (var i = 0, il = l.length; i < il; m += l[i++]);
     return m;
 }
 
+function calculatePercent(download) {
+    return Math.floor(sum(download.progress) / download.size * 100);
+}
+
 return {
+    config: {
+        bar: bar,
+        pie: pie
+    },
+    createRoot: createRoot,
+    createControlBar: createControlBar,
+    createMeasurementLabel: createMeasurementLabel,
+    createPie: createPie,
+    createProgressBar: createProgressBar,
+    createControl: createControl,
+    createTextNode: createTextNode,
+    createLink: createLink,
+    createElement: createElement,
+    createPanel: createPanel,
+    clearPanels: clearPanels,
+    createProgressRenderer: createProgressRenderer,
+    createRenderer: createRenderer,
+    drawPie: drawPie,
+    drawBar: drawBar,
+    downloads: downloads,
+    getStatusString: getStatusString,
+    getJobState: getJobState,
+    getTaskState: getTaskState,
+    getRoot: getRoot,
+    getRate: getRate,
+    getPercent: getPercent,
+    getProgressContext2d: getProgressContext2d,
+    getDiscContext2d: getDiscContext2d,
+    getPanel: getPanel,
+    getCompleted: calculatePercent,
     gui: gui,
-    regex: regex
+    insertRoot: insertRoot,
+    Panel: Panel,
+    panels: panels,
+    removeRoot: removeRoot,
+    removePanel: removePanel,
+    strings: status_strings,
+    updateRenderer: updateRenderer,
+    updateRoot: updateRoot,
+    updatePanel: updatePanel
 };
 
 });

@@ -1,5 +1,6 @@
 ext.define('ext', function() {
 
+var utils = extension.utils;
 var modal = extension.modal;
 var dllib = extension.dllib;
 
@@ -7,12 +8,12 @@ function getError(input) {
     var msg;
     switch (input.id) {
         case 'host':
-            if (!dllib.regex.ip.test(input.value.trim()))
+            if (!utils.ip.test(input.value.trim()))
                 msg = 'Invalid IP address';
             break;
         case 'path':
             var value = input.value.trim();
-            if (value && !dllib.regex.path.test(value))
+            if (value && !utils.path.test(value))
                 msg = 'Invalid path';
             break;
         case 'port':
